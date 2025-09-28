@@ -1,6 +1,11 @@
 # Data-Science-Portfolio
 This repository is my portfolio of data science projects... It is a work in progress.
 
+## Links
+
+<ul>
+  <li><a href = "https://www.linkedin.com/in/michael-nicodemus-864643160" target="_blank">LinkedIn</a></li>
+</ul>
 
 ## About Me
 I am a data analyst with a Master’s degree in Statistics and a strong background in applying data to solve real-world problems. Over the course of my career, I’ve specialized in fraud and risk analytics, using statistical modeling, data mining, and business intelligence tools to detect patterns, mitigate risk, and protect against financial loss.
