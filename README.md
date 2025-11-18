@@ -5,7 +5,8 @@ This repository is my portfolio of data science projects... It is a work in prog
 
 <ul>
   <li><a href = "https://www.linkedin.com/in/michael-nicodemus-864643160" target="_blank">LinkedIn</a></li>
-  <li>Email: Nicodemus.MichaelD@gmail.com</li>
+  <li>Email: <a href="mailto:Nicodemus.MichaelD@gmail.com">Nicodemus.MichaelD@gmail.com</a></li>
+
 </ul>
 
 ## About Me
