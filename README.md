@@ -15,3 +15,11 @@ I am a data analyst with a Master’s degree in Statistics and a strong backgrou
 Beyond fraud and risk, I bring expertise in turning complex datasets into actionable insights that inform strategy, improve efficiency, and drive measurable results. I have several years of professional experience using SQL, Python, Tableau and functions in Excel/Google Sheets along with academic experience in predictive modeling using common python libraries (Numpy, Pandas, Pytorch, Scikit-learn, Tensorflow, Keras, Seaborn, MatPlotLib and more)
 
 
+
+## Education & Certificates
+
+### Relevant CV
+
+## Technical Projects & Demos
+
+## Professional Progression
