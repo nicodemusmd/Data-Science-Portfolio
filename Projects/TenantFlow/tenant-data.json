@@ -1,0 +1,116 @@
+{
+  "tenant": {
+    "userId": "renter-K9XM2BTP",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "email": "jane.smith@email.com",
+    "phone": "(555) 123-4567",
+    "avatarInitials": "JS"
+  },
+  "property": {
+    "address": "412 Maple Avenue",
+    "unit": "Apt 3B",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78701",
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "landlord": "Robert Chen"
+  },
+  "lease": {
+    "startDate": "2024-02-01",
+    "expiryDate": "2026-01-31",
+    "monthlyRent": 1850,
+    "securityDeposit": 3700,
+    "status": "active"
+  },
+  "payments": {
+    "lastPayment": {
+      "amount": 1850,
+      "date": "2026-02-01",
+      "status": "paid",
+      "method": "Bank Transfer"
+    },
+    "nextPayment": {
+      "amount": 1850,
+      "dueDate": "2026-03-01",
+      "status": "upcoming"
+    },
+    "history": [
+      { "date": "2026-02-01", "amount": 1850, "status": "paid", "method": "Bank Transfer" },
+      { "date": "2026-01-01", "amount": 1850, "status": "paid", "method": "Bank Transfer" },
+      { "date": "2025-12-01", "amount": 1850, "status": "paid", "method": "Bank Transfer" },
+      { "date": "2025-11-01", "amount": 1850, "status": "paid", "method": "Bank Transfer" },
+      { "date": "2025-10-01", "amount": 1850, "status": "paid", "method": "Bank Transfer" }
+    ]
+  },
+  "maintenanceRequests": [
+    {
+      "id": "MR-001",
+      "title": "Leaking kitchen faucet",
+      "description": "The hot water tap has been dripping constantly for about a week.",
+      "category": "Plumbing",
+      "status": "in_progress",
+      "priority": "medium",
+      "submittedDate": "2026-02-10",
+      "lastUpdate": "2026-02-14",
+      "updateNote": "Plumber scheduled for Feb 18th between 10am–2pm."
+    },
+    {
+      "id": "MR-002",
+      "title": "Heating unit making noise",
+      "description": "Loud banging sound from the heating unit, especially at night.",
+      "category": "HVAC",
+      "status": "resolved",
+      "priority": "high",
+      "submittedDate": "2026-01-22",
+      "lastUpdate": "2026-01-28",
+      "updateNote": "Unit serviced and repaired. Issue resolved."
+    },
+    {
+      "id": "MR-003",
+      "title": "Bathroom exhaust fan not working",
+      "description": "The exhaust fan in the main bathroom stopped working.",
+      "category": "Electrical",
+      "status": "open",
+      "priority": "low",
+      "submittedDate": "2026-02-18",
+      "lastUpdate": "2026-02-18",
+      "updateNote": "Request received. We'll be in touch shortly."
+    }
+  ],
+  "documents": [
+    {
+      "id": "DOC-001",
+      "name": "Lease Agreement",
+      "type": "lease",
+      "dateAdded": "2024-02-01",
+      "size": "245 KB",
+      "icon": "📄"
+    },
+    {
+      "id": "DOC-002",
+      "name": "Credit Check Report",
+      "type": "credit",
+      "dateAdded": "2024-01-28",
+      "size": "118 KB",
+      "icon": "📊"
+    },
+    {
+      "id": "DOC-003",
+      "name": "Move-In Inspection Report",
+      "type": "inspection",
+      "dateAdded": "2024-02-01",
+      "size": "892 KB",
+      "icon": "🏠"
+    },
+    {
+      "id": "DOC-004",
+      "name": "Renters Insurance Certificate",
+      "type": "insurance",
+      "dateAdded": "2024-02-03",
+      "size": "156 KB",
+      "icon": "🛡️"
+    }
+  ]
+}

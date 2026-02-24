@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TenetFlow — Property Owners</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles/styles.css" />
+  <link rel="stylesheet" href="styles/owner.css" />
+</head>
+
+<body>
+
+  <nav>
+    <div class="logo">Tenet<span>Flow</span></div>
+    <a href="index.html">Back to home</a>
+  </nav>
+
+  <main>
+    <!-- LEFT -->
+    <div class="left-panel">
+      <a href="index.html" class="back-link">← Back</a>
+      <p class="panel-eyebrow">For Property Owners</p>
+      <h1 class="panel-headline">Your portfolio,<br /><em>finally</em><br />under control.</h1>
+      <p class="panel-sub">Join the waitlist and be first to access a platform built for landlords who are serious about
+        their investment.</p>
+      <div class="perks">
+        <div class="perk">
+          <div class="perk-icon">📊</div>
+          <span class="perk-text">Automated accounting & reporting</span>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">💳</div>
+          <span class="perk-text">Rent collection on autopilot</span>
+        </div>
+        <div class="perk">
+          <div class="perk-icon">🔧</div>
+          <span class="perk-text">Maintenance requests, tracked end to end</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-panel">
+
+      <!-- Progress -->
+      <div class="progress-wrap">
+        <div class="progress-labels">
+          <span class="progress-label active" id="lbl-1">Your Info</span>
+          <span class="progress-label" id="lbl-2">Portfolio</span>
+          <span class="progress-label" id="lbl-3">Properties</span>
+          <span class="progress-label" id="lbl-4">Pain Points</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- Form card -->
+      <div class="form-card">
+
+        <!-- STEP 1: Basic Info -->
+        <div class="step active" id="step-1">
+          <h2 class="step-title">Let's start with you</h2>
+          <p class="step-subtitle">We just need the basics to reserve your spot.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName">First Name</label>
+              <input type="text" id="firstName" placeholder="Jane" autocomplete="given-name" />
+              <span class="error-msg" id="firstName-error">Required</span>
+            </div>
+            <div class="form-group">
+              <label for="lastName">Last Name</label>
+              <input type="text" id="lastName" placeholder="Smith" autocomplete="family-name" />
+              <span class="error-msg" id="lastName-error">Required</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="jane@example.com" autocomplete="email" />
+            <span class="error-msg" id="email-error">Please enter a valid email</span>
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" placeholder="(555) 000-0000" autocomplete="tel" />
+            <span class="error-msg" id="phone-error">Please enter a valid phone number</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn-next" onclick="nextStep(1)">Continue →</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Portfolio Overview -->
+        <div class="step" id="step-2">
+          <h2 class="step-title">Your portfolio</h2>
+          <p class="step-subtitle">Tell us about your properties at a high level.</p>
+          <div class="form-group">
+            <label for="propertyCount">How many properties do you own or manage?</label>
+            <select id="propertyCount">
+              <option value="">Select...</option>
+              <option value="1">1</option>
+              <option value="2-5">2–5</option>
+              <option value="6-10">6–10</option>
+              <option value="11-20">11–20</option>
+              <option value="20+">20+</option>
+            </select>
+            <span class="error-msg" id="propertyCount-error">Please select an option</span>
+          </div>
+          <div class="form-group">
+            <label for="managementStyle">How are you currently managing?</label>
+            <select id="managementStyle">
+              <option value="">Select...</option>
+              <option value="self">Self-managing</option>
+              <option value="manager">Using a property manager</option>
+              <option value="mixed">Mix of both</option>
+            </select>
+            <span class="error-msg" id="managementStyle-error">Please select an option</span>
+          </div>
+          <div class="form-group">
+            <label>What property types do you have? (Select all that apply)</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item"><input type="checkbox" value="single-family" /> <span>Single family
+                  home</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="multi-unit" /> <span>Multi-unit /
+                  Duplex</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="condo" /> <span>Condo /
+                  Apartment</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="commercial" /> <span>Commercial</span></label>
+            </div>
+            <span class="error-msg" id="propertyTypes-error">Please select at least one</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn-back" onclick="prevStep(2)">← Back</button>
+            <button class="btn-next" onclick="nextStep(2)">Continue →</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Property Details -->
+        <div class="step" id="step-3">
+          <h2 class="step-title">Property details</h2>
+          <p class="step-subtitle">Add each property you'd like to manage through TenetFlow.</p>
+
+          <div class="properties-list" id="properties-list">
+            <!-- Injected by JS -->
+          </div>
+
+          <button class="add-property-btn" onclick="addProperty()">+ Add Another Property</button>
+
+          <div class="btn-row">
+            <button class="btn-back" onclick="prevStep(3)">← Back</button>
+            <button class="btn-next" onclick="nextStep(3)">Continue →</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Pain Points -->
+        <div class="step" id="step-4">
+          <h2 class="step-title">Current challenges</h2>
+          <p class="step-subtitle">Help us build the right things first. This takes 30 seconds.</p>
+          <div class="form-group">
+            <label>What's your biggest headache right now? (Select all that apply)</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item"><input type="checkbox" value="rent-collection" /> <span>Chasing rent
+                  payments</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="maintenance" /> <span>Tracking maintenance
+                  requests</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="accounting" /> <span>Accounting &
+                  bookkeeping</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="communication" /> <span>Communicating with
+                  tenants</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="leases" /> <span>Managing lease
+                  documents</span></label>
+            </div>
+            <span class="error-msg" id="painPoints-error">Please select at least one</span>
+          </div>
+          <div class="form-group">
+            <label for="currentTools">What tools are you using today?</label>
+            <select id="currentTools">
+              <option value="">Select...</option>
+              <option value="spreadsheets">Spreadsheets (Excel / Google Sheets)</option>
+              <option value="another-app">Another property management app</option>
+              <option value="nothing">Nothing — it's all in my head</option>
+              <option value="mixed">A mix of things</option>
+            </select>
+            <span class="error-msg" id="currentTools-error">Please select an option</span>
+          </div>
+          <div class="form-group">
+            <label for="additionalNotes">Anything else you'd like us to know? <span
+                style="color:#B0BDB8;font-size:0.7rem;text-transform:none;">(Optional)</span></label>
+            <textarea id="additionalNotes"
+              placeholder="Tell us what would make TenetFlow perfect for you..."></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn-back" onclick="prevStep(4)">← Back</button>
+            <button class="btn-submit" id="submit-btn" onclick="submitForm()">Reserve My Spot →</button>
+          </div>
+        </div>
+
+        <!-- SUCCESS -->
+        <div class="success-state" id="success-view">
+          <div class="success-icon">🎉</div>
+          <h2 class="success-title">You're on the list!</h2>
+          <p class="success-sub">Thanks for the detail — it'll directly shape what we build first. We'll be in touch
+            soon.</p>
+          <a href="index.html" class="back-home">Back to Home</a>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let currentStep = 1;
+    const totalSteps = 4;
+    let propertyCount = 0;
+    const API = 'http://localhost:${location.port || 3000}';
+    // ── PROGRESS ──
+    function updateProgress(step) {
+      document.getElementById('progress-fill').style.width = `${(step / totalSteps) * 100}%`;
+      for (let i = 1; i <= totalSteps; i++) {
+        document.getElementById(`lbl-${i}`).classList.toggle('active', i === step);
+      }
+    }
+
+    function showStep(step) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      document.getElementById(`step-${step}`).classList.add('active');
+      updateProgress(step);
+      currentStep = step;
+    }
+
+    function prevStep(from) { showStep(from - 1); }
+
+    // ── PHONE FORMAT ──
+    document.getElementById('phone').addEventListener('input', function (e) {
+      let val = e.target.value.replace(/\D/g, '').substring(0, 10);
+      if (val.length >= 7) val = `(${val.substring(0, 3)}) ${val.substring(3, 6)}-${val.substring(6)}`;
+      else if (val.length >= 4) val = `(${val.substring(0, 3)}) ${val.substring(3)}`;
+      else if (val.length > 0) val = `(${val}`;
+      e.target.value = val;
+    });
+
+    // ── VALIDATION ──
+    function clearError(id) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.remove('error'); }
+      const err = document.getElementById(`${id}-error`);
+      if (err) err.classList.remove('visible');
+    }
+    function showError(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('error');
+      const err = document.getElementById(`${id}-error`);
+      if (err) err.classList.add('visible');
+    }
+
+    function validateStep(step) {
+      let valid = true;
+
+      if (step === 1) {
+        [
+          { id: 'firstName', check: v => v.trim().length > 0 },
+          { id: 'lastName', check: v => v.trim().length > 0 },
+          { id: 'email', check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
+          { id: 'phone', check: v => v.replace(/\D/g, '').length >= 10 },
+        ].forEach(({ id, check }) => {
+          clearError(id);
+          if (!check(document.getElementById(id).value)) { showError(id); valid = false; }
+        });
+      }
+
+      if (step === 2) {
+        ['propertyCount', 'managementStyle'].forEach(id => {
+          clearError(id);
+          if (!document.getElementById(id).value) { showError(id); valid = false; }
+        });
+        const checked = document.querySelectorAll('.step#step-2 input[type="checkbox"]:checked');
+        const err = document.getElementById('propertyTypes-error');
+        if (checked.length === 0) { err.classList.add('visible'); valid = false; }
+        else err.classList.remove('visible');
+      }
+
+      if (step === 3) {
+        // Validate each property card
+        document.querySelectorAll('.property-card').forEach((card, i) => {
+          ['address', 'bedrooms', 'bathrooms', 'monthlyRent', 'leaseStart', 'leaseExpiry', 'deposit'].forEach(field => {
+            const input = card.querySelector(`[data-field="${field}"]`);
+            if (input && !input.value.trim()) {
+              input.classList.add('error'); valid = false;
+            } else if (input) {
+              input.classList.remove('error');
+            }
+          });
+          const leaseStatus = card.querySelector('[data-field="leaseStatus"]');
+          if (leaseStatus && !leaseStatus.value) { leaseStatus.classList.add('error'); valid = false; }
+          else if (leaseStatus) leaseStatus.classList.remove('error');
+        });
+        if (propertyCount === 0) { valid = false; alert('Please add at least one property.'); }
+      }
+
+      if (step === 4) {
+        const checked = document.querySelectorAll('#step-4 input[type="checkbox"]:checked');
+        const err = document.getElementById('painPoints-error');
+        if (checked.length === 0) { err.classList.add('visible'); valid = false; }
+        else err.classList.remove('visible');
+
+        clearError('currentTools');
+        if (!document.getElementById('currentTools').value) { showError('currentTools'); valid = false; }
+      }
+
+      return valid;
+    }
+
+    function nextStep(from) {
+      if (!validateStep(from)) return;
+      if (from < totalSteps) showStep(from + 1);
+    }
+
+    // ── PROPERTIES ──
+    function addProperty() {
+      propertyCount++;
+      const idx = propertyCount;
+      const list = document.getElementById('properties-list');
+
+      const card = document.createElement('div');
+      card.className = 'property-card';
+      card.id = `property-${idx}`;
+      card.innerHTML = `
+      <div class="property-card-header">
+        <span class="property-card-title">Property ${idx}</span>
+        ${idx > 1 ? `<button class="remove-property" onclick="removeProperty(${idx})">Remove</button>` : ''}
+      </div>
+      <div class="form-group">
+        <label>Street Address</label>
+        <input type="text" data-field="address" placeholder="123 Main St, City, State, ZIP"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bedrooms</label>
+          <select data-field="bedrooms">
+            <option value="">Select</option>
+            <option>Studio</option><option>1</option><option>2</option>
+            <option>3</option><option>4</option><option>5+</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bathrooms</label>
+          <select data-field="bathrooms">
+            <option value="">Select</option>
+            <option>1</option><option>1.5</option><option>2</option>
+            <option>2.5</option><option>3</option><option>3+</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Lease Status</label>
+        <select data-field="leaseStatus">
+          <option value="">Select...</option>
+          <option value="active">Active — tenant currently living here</option>
+          <option value="expiring">Expiring soon</option>
+          <option value="vacant">Vacant — no current tenant</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Lease Start Date</label>
+          <input type="date" data-field="leaseStart"/>
+        </div>
+        <div class="form-group">
+          <label>Lease Expiry Date</label>
+          <input type="date" data-field="leaseExpiry"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Monthly Rent ($)</label>
+          <input type="number" data-field="monthlyRent" placeholder="e.g. 1800" min="0"/>
+        </div>
+        <div class="form-group">
+          <label>Security Deposit ($)</label>
+          <input type="number" data-field="deposit" placeholder="e.g. 3600" min="0"/>
+        </div>
+      </div>
+    `;
+      list.appendChild(card);
+    }
+
+    function removeProperty(idx) {
+      const card = document.getElementById(`property-${idx}`);
+      if (card) { card.remove(); propertyCount--; }
+    }
+
+    // Auto-add first property on load
+    addProperty();
+
+    // ── SUBMIT ──
+    async function submitForm() {
+      if (!validateStep(4)) return;
+
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      // Collect properties
+      const properties = [];
+      document.querySelectorAll('.property-card').forEach(card => {
+        properties.push({
+          address: card.querySelector('[data-field="address"]').value.trim(),
+          bedrooms: card.querySelector('[data-field="bedrooms"]').value,
+          bathrooms: card.querySelector('[data-field="bathrooms"]').value,
+          leaseStatus: card.querySelector('[data-field="leaseStatus"]').value,
+          leaseStart: card.querySelector('[data-field="leaseStart"]').value,
+          leaseExpiry: card.querySelector('[data-field="leaseExpiry"]').value,
+          monthlyRent: card.querySelector('[data-field="monthlyRent"]').value,
+          deposit: card.querySelector('[data-field="deposit"]').value,
+        });
+      });
+
+      // Collect pain points
+      const painPoints = [...document.querySelectorAll('#step-4 input[type="checkbox"]:checked')].map(c => c.value);
+      const propertyTypes = [...document.querySelectorAll('#step-2 input[type="checkbox"]:checked')].map(c => c.value);
+
+      const payload = {
+        segment: 'owner',
+        submittedAt: new Date().toISOString(),
+        basicInfo: {
+          firstName: document.getElementById('firstName').value.trim(),
+          lastName: document.getElementById('lastName').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+        },
+        portfolio: {
+          propertyCount: document.getElementById('propertyCount').value,
+          managementStyle: document.getElementById('managementStyle').value,
+          propertyTypes,
+        },
+        properties,
+        painPoints: {
+          challenges: painPoints,
+          currentTools: document.getElementById('currentTools').value,
+          additionalNotes: document.getElementById('additionalNotes').value.trim(),
+        }
+      };
+
+      try {
+        const res = await fetch('${API}/api/owners', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Server error');
+
+        document.querySelectorAll('.step').forEach(s => s.style.display = 'none');
+        document.querySelector('.progress-wrap').style.display = 'none';
+        document.getElementById('success-view').style.display = 'block';
+
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Reserve My Spot →';
+        alert('Something went wrong. Make sure the server is running (node server.js).');
+      }
+    }
+  </script>
+
+</body>
+
+</html>

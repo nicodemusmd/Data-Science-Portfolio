@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TenantFlow — Renter Portal</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="styles/portal.css" />
+</head>
+
+<body>
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">Tenant<span>Flow</span></div>
+      <div class="portal-label">Renter Portal</div>
+    </div>
+
+    <div class="sidebar-tenant">
+      <div class="avatar" id="sidebar-avatar">JS</div>
+      <div>
+        <div class="tenant-name" id="sidebar-name">Jane Smith</div>
+        <div class="tenant-unit" id="sidebar-unit">412 Maple Ave, Apt 3B</div>
+      </div>
+    </div>
+
+    <div style="flex:1;">
+      <div class="nav-section-label" style="margin-top:0.5rem;">Main</div>
+      <button class="nav-item active" onclick="showView('dashboard', this)">
+        <span class="nav-icon">🏠</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="showView('payments', this)">
+        <span class="nav-icon">💳</span> Payments
+      </button>
+      <button class="nav-item" onclick="showView('maintenance', this)">
+        <span class="nav-icon">🔧</span> Maintenance
+        <span class="nav-badge" id="maintenance-badge">1</span>
+      </button>
+      <button class="nav-item" onclick="showView('documents', this)">
+        <span class="nav-icon">📄</span> Documents
+      </button>
+      <button class="nav-item" onclick="showView('apartments', this)">
+        <span class="nav-icon">🏘️</span> Find Apartments
+      </button>
+
+      <div class="nav-section-label" style="margin-top:1.5rem;">Account</div>
+      <button class="nav-item" onclick="showView('profile', this)">
+        <span class="nav-icon">👤</span> My Profile
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="window.location.href='index.html'">
+        <span class="nav-icon">←</span> Back to Home
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <div class="main-content">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-date" id="topbar-date"></div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- ══ DASHBOARD VIEW ══ -->
+      <div class="view active" id="view-dashboard">
+
+        <!-- Stat Cards -->
+        <div class="stat-grid" id="stat-grid"></div>
+
+        <div class="dashboard-grid">
+
+          <!-- Payment Summary -->
+          <div class="card">
+            <div class="card-title">
+              Payment Summary
+              <span class="badge badge-green"><span class="badge-dot"></span> Current</span>
+            </div>
+            <div id="payment-summary"></div>
+          </div>
+
+          <!-- Lease Status -->
+          <div class="card">
+            <div class="card-title">Lease Status</div>
+            <div id="lease-summary"></div>
+          </div>
+
+          <!-- Recent Maintenance -->
+          <div class="card" style="grid-column: 1 / -1;">
+            <div class="card-title">
+              Recent Maintenance
+              <button class="new-request-btn" style="margin:0;padding:0.45rem 0.9rem;font-size:0.78rem;"
+                onclick="showView('maintenance', document.querySelector('[onclick*=maintenance]'))">View All →</button>
+            </div>
+            <div id="recent-maintenance"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ══ PAYMENTS VIEW ══ -->
+      <div class="view" id="view-payments">
+        <div class="card">
+          <div class="card-title">Next Payment Due</div>
+          <div id="next-payment-detail"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Payment History</div>
+          <table class="payment-table" id="payment-history-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="payment-history-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ MAINTENANCE VIEW ══ -->
+      <div class="view" id="view-maintenance">
+        <button class="new-request-btn" onclick="alert('Maintenance request form coming soon!')">
+          + New Maintenance Request
+        </button>
+        <div id="all-maintenance"></div>
+      </div>
+
+      <!-- ══ DOCUMENTS VIEW ══ -->
+      <div class="view" id="view-documents">
+        <div class="card">
+          <div class="card-title">My Documents</div>
+          <p class="text-muted mt-1" style="margin-bottom:1.5rem;">Click any document to preview or download.</p>
+          <div class="doc-grid" id="doc-grid"></div>
+        </div>
+      </div>
+
+      <!-- ══ APARTMENTS VIEW ══ -->
+      <div class="view" id="view-apartments">
+        <div class="coming-soon-wrap">
+          <div class="coming-soon-icon">🏘️</div>
+          <h2 class="coming-soon-title">Browse Available Apartments</h2>
+          <p class="coming-soon-sub">We're building a marketplace of verified listings from TenantFlow owners. Be the
+            first to know when it launches.</p>
+          <div class="coming-soon-badge">🚀 Coming Soon</div>
+        </div>
+      </div>
+
+      <!-- ══ PROFILE VIEW ══ -->
+      <div class="view" id="view-profile">
+        <div class="card">
+          <div class="card-title">My Profile</div>
+          <div id="profile-details"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── CHAT BUBBLE ── -->
+  <button class="chat-bubble" onclick="toggleChat()" id="chat-bubble-btn">
+    💬
+    <span class="chat-notification" id="chat-notif">1</span>
+  </button>
+
+  <!-- ── CHAT WINDOW ── -->
+  <div class="chat-window" id="chat-window">
+    <div class="chat-header">
+      <div class="chat-header-avatar">🎧</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">TenantFlow Support</div>
+        <div class="chat-header-status"><span class="online-dot"></span> Online — replies in minutes</div>
+      </div>
+      <button class="chat-close" onclick="toggleChat()">✕</button>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-msg agent">
+        <div class="chat-bubble-msg">👋 Hi there! I'm here to help with anything related to your tenancy — payments,
+          maintenance, documents, or anything else.</div>
+        <div class="chat-time">Today, 9:00 AM</div>
+      </div>
+    </div>
+
+    <div class="chat-input-row">
+      <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..."
+        onkeydown="if(event.key==='Enter') sendMessage()" />
+      <button class="chat-send" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+
+  <script>
+    // ── DATA LOAD ──
+    let tenantData = {};
+
+    async function loadData() {
+      try {
+        const res = await fetch('tenant-data.json');
+        tenantData = await res.json();
+        renderAll();
+      } catch (e) {
+        console.error('Could not load tenant-data.json', e);
+      }
+    }
+
+    // ── VIEW SWITCHER ──
+    function showView(viewId, btn) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`view-${viewId}`).classList.add('active');
+      if (btn) btn.classList.add('active');
+      const titles = { dashboard: 'Dashboard', payments: 'Payments', maintenance: 'Maintenance Requests', documents: 'My Documents', apartments: 'Find Apartments', profile: 'My Profile' };
+      document.getElementById('topbar-title').textContent = titles[viewId] || viewId;
+    }
+
+    // ── HELPERS ──
+    function formatDate(dateStr) {
+      return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    function formatCurrency(amount) {
+      return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+    }
+    function statusBadge(status) {
+      const map = {
+        paid: ['badge-green', 'Paid'],
+        upcoming: ['badge-clay', 'Upcoming'],
+        open: ['badge-blue', 'Open'],
+        in_progress: ['badge-clay', 'In Progress'],
+        resolved: ['badge-green', 'Resolved'],
+        active: ['badge-green', 'Active'],
+        overdue: ['badge-red', 'Overdue'],
+      };
+      const [cls, label] = map[status] || ['badge-muted', status];
+      return `<span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>`;
+    }
+    function leaseProgressPct(start, end) {
+      const s = new Date(start), e = new Date(end), n = new Date();
+      return Math.min(100, Math.max(0, Math.round(((n - s) / (e - s)) * 100)));
+    }
+    function daysUntil(dateStr) {
+      const diff = new Date(dateStr + 'T00:00:00') - new Date();
+      return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    }
+
+    // ── RENDER ALL ──
+    function renderAll() {
+      const { tenant, property, lease, payments, maintenanceRequests, documents } = tenantData;
+
+      // Topbar date
+      document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+      // Sidebar
+      document.getElementById('sidebar-avatar').textContent = tenant.avatarInitials;
+      document.getElementById('sidebar-name').textContent = `${tenant.firstName} ${tenant.lastName}`;
+      document.getElementById('sidebar-unit').textContent = `${property.address}, ${property.unit}`;
+
+      // Maintenance badge — open items
+      const openCount = maintenanceRequests.filter(m => m.status !== 'resolved').length;
+      const badge = document.getElementById('maintenance-badge');
+      badge.textContent = openCount;
+      badge.style.display = openCount > 0 ? 'inline-flex' : 'none';
+
+      renderStatGrid(tenant, lease, payments, maintenanceRequests);
+      renderPaymentSummary(payments);
+      renderLeaseSummary(lease);
+      renderRecentMaintenance(maintenanceRequests);
+      renderPaymentsView(payments);
+      renderMaintenanceView(maintenanceRequests);
+      renderDocuments(documents);
+      renderProfile(tenant, property);
+    }
+
+    function renderStatGrid(tenant, lease, payments, maintenance) {
+      const days = daysUntil(payments.nextPayment.dueDate);
+      const openMaint = maintenance.filter(m => m.status !== 'resolved').length;
+      const pct = leaseProgressPct(lease.startDate, lease.expiryDate);
+
+      document.getElementById('stat-grid').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-icon">💳</div>
+        <div class="stat-label">Next Rent Due</div>
+        <div class="stat-value">${formatCurrency(payments.nextPayment.amount)}</div>
+        <div class="stat-sub">Due in ${days} days · ${formatDate(payments.nextPayment.dueDate)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-label">Last Payment</div>
+        <div class="stat-value">${formatCurrency(payments.lastPayment.amount)}</div>
+        <div class="stat-sub">${formatDate(payments.lastPayment.date)} · ${payments.lastPayment.method}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔧</div>
+        <div class="stat-label">Open Requests</div>
+        <div class="stat-value">${openMaint}</div>
+        <div class="stat-sub">${maintenance.length} total submitted</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-label">Lease Expires</div>
+        <div class="stat-value">${formatDate(lease.expiryDate)}</div>
+        <div class="stat-sub">${100 - pct}% of lease remaining</div>
+      </div>
+    `;
+    }
+
+    function renderPaymentSummary(payments) {
+      const days = daysUntil(payments.nextPayment.dueDate);
+      document.getElementById('payment-summary').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:0.85rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.85rem;background:var(--sand);border-radius:10px;">
+          <div>
+            <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.25rem;">Next Payment</div>
+            <div style="font-size:1.1rem;font-weight:700;font-family:'Playfair Display',serif;color:var(--slate);">${formatCurrency(payments.nextPayment.amount)}</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.1rem;">Due ${formatDate(payments.nextPayment.dueDate)} · ${days} days</div>
+          </div>
+          ${statusBadge(payments.nextPayment.status)}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.85rem;background:var(--sand);border-radius:10px;">
+          <div>
+            <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.25rem;">Last Payment</div>
+            <div style="font-size:1.1rem;font-weight:700;font-family:'Playfair Display',serif;color:var(--slate);">${formatCurrency(payments.lastPayment.amount)}</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.1rem;">${formatDate(payments.lastPayment.date)} · ${payments.lastPayment.method}</div>
+          </div>
+          ${statusBadge(payments.lastPayment.status)}
+        </div>
+      </div>
+    `;
+    }
+
+    function renderLeaseSummary(lease) {
+      const pct = leaseProgressPct(lease.startDate, lease.expiryDate);
+      document.getElementById('lease-summary').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:0.75rem;">
+        <div style="display:flex;justify-content:space-between;font-size:0.85rem;">
+          <span style="color:var(--muted);">Status</span>
+          ${statusBadge(lease.status)}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.85rem;">
+          <span style="color:var(--muted);">Monthly Rent</span>
+          <strong>${formatCurrency(lease.monthlyRent)}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.85rem;">
+          <span style="color:var(--muted);">Lease Start</span>
+          <strong>${formatDate(lease.startDate)}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.85rem;">
+          <span style="color:var(--muted);">Lease Expires</span>
+          <strong>${formatDate(lease.expiryDate)}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.85rem;">
+          <span style="color:var(--muted);">Security Deposit</span>
+          <strong>${formatCurrency(lease.securityDeposit)}</strong>
+        </div>
+        <div class="lease-progress-wrap">
+          <div class="lease-progress-labels">
+            <span>${formatDate(lease.startDate)}</span>
+            <span>${pct}% elapsed</span>
+            <span>${formatDate(lease.expiryDate)}</span>
+          </div>
+          <div class="lease-progress-bg">
+            <div class="lease-progress-fill" style="width:${pct}%"></div>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+
+    function renderRecentMaintenance(requests) {
+      const recent = requests.slice(0, 2);
+      document.getElementById('recent-maintenance').innerHTML = recent.map(r => maintenanceCard(r)).join('');
+    }
+
+    function renderMaintenanceView(requests) {
+      document.getElementById('all-maintenance').innerHTML = requests.map(r => maintenanceCard(r)).join('');
+    }
+
+    function maintenanceCard(r) {
+      return `
+      <div class="maintenance-item">
+        <div class="maintenance-header">
+          <div>
+            <div class="maintenance-title">${r.title}</div>
+            <div class="maintenance-meta">${r.id} · ${r.category} · Submitted ${formatDate(r.submittedDate)}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;">
+            ${statusBadge(r.status)}
+            <span class="badge badge-muted" style="font-size:0.68rem;">${r.priority} priority</span>
+          </div>
+        </div>
+        <div style="font-size:0.83rem;color:var(--muted);line-height:1.6;">${r.description}</div>
+        <div class="maintenance-update">📌 ${r.updateNote}</div>
+      </div>
+    `;
+    }
+
+    function renderPaymentsView(payments) {
+      const days = daysUntil(payments.nextPayment.dueDate);
+      document.getElementById('next-payment-detail').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--slate);">${formatCurrency(payments.nextPayment.amount)}</div>
+          <div style="font-size:0.85rem;color:var(--muted);margin-top:0.3rem;">Due ${formatDate(payments.nextPayment.dueDate)} · ${days} days away</div>
+        </div>
+        <button onclick="alert('Online payment coming in Sprint 3!')" style="padding:0.75rem 1.5rem;background:var(--clay);color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;">
+          Pay Now →
+        </button>
+      </div>
+    `;
+
+      document.getElementById('payment-history-body').innerHTML = payments.history.map(p => `
+      <tr>
+        <td>${formatDate(p.date)}</td>
+        <td><strong>${formatCurrency(p.amount)}</strong></td>
+        <td>${p.method}</td>
+        <td>${statusBadge(p.status)}</td>
+      </tr>
+    `).join('');
+    }
+
+    function renderDocuments(documents) {
+      document.getElementById('doc-grid').innerHTML = documents.map(d => `
+      <div class="doc-card" onclick="alert('Document preview coming soon!')">
+        <div class="doc-icon">${d.icon}</div>
+        <div class="doc-name">${d.name}</div>
+        <div class="doc-meta">Added ${formatDate(d.dateAdded)} · ${d.size}</div>
+        <div class="doc-action">⬇ Download</div>
+      </div>
+    `).join('');
+    }
+
+    function renderProfile(tenant, property) {
+      document.getElementById('profile-details').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <div>
+          <div class="stat-label" style="margin-bottom:0.5rem;">Personal Info</div>
+          <div style="display:flex;flex-direction:column;gap:0.65rem;font-size:0.88rem;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Name</span><strong>${tenant.firstName} ${tenant.lastName}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Email</span><strong>${tenant.email}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Phone</span><strong>${tenant.phone}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">User ID</span><strong style="font-size:0.78rem;color:var(--muted);">${tenant.userId}</strong></div>
+          </div>
+        </div>
+        <div>
+          <div class="stat-label" style="margin-bottom:0.5rem;">Property Info</div>
+          <div style="display:flex;flex-direction:column;gap:0.65rem;font-size:0.88rem;">
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Address</span><strong>${property.address}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Unit</span><strong>${property.unit}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">City</span><strong>${property.city}, ${property.state}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Landlord</span><strong>${property.landlord}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Beds / Baths</span><strong>${property.bedrooms} bed / ${property.bathrooms} bath</strong></div>
+          </div>
+        </div>
+      </div>
+    `;
+    }
+
+    // ── CHAT ──
+    let chatOpen = false;
+    function toggleChat() {
+      chatOpen = !chatOpen;
+      document.getElementById('chat-window').classList.toggle('open', chatOpen);
+      document.getElementById('chat-bubble-btn').textContent = chatOpen ? '✕' : '💬';
+      if (chatOpen) {
+        document.getElementById('chat-notif').style.display = 'none';
+        document.getElementById('chat-input').focus();
+      } else {
+        document.getElementById('chat-bubble-btn').innerHTML = '💬';
+      }
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const messages = document.getElementById('chat-messages');
+      const now = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+      // User message
+      messages.innerHTML += `
+      <div class="chat-msg user">
+        <div class="chat-bubble-msg">${text}</div>
+        <div class="chat-time">${now}</div>
+      </div>
+    `;
+      input.value = '';
+      messages.scrollTop = messages.scrollHeight;
+
+      // Simulated agent reply
+      setTimeout(() => {
+        messages.innerHTML += `
+        <div class="chat-msg agent">
+          <div class="chat-bubble-msg">Thanks for reaching out! A member of our team will follow up shortly. In the meantime, feel free to check your dashboard for updates.</div>
+          <div class="chat-time">${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</div>
+        </div>
+      `;
+        messages.scrollTop = messages.scrollHeight;
+      }, 1200);
+    }
+
+    // ── INIT ──
+    loadData();
+  </script>
+
+</body>
+
+</html>
