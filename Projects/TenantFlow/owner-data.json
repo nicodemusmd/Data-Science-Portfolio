@@ -1,0 +1,153 @@
+{
+  "owner": {
+    "userId": "owner-A4QZ7YNR",
+    "firstName": "Robert",
+    "lastName": "Chen",
+    "email": "robert.chen@email.com",
+    "phone": "(555) 987-6543",
+    "avatarInitials": "RC"
+  },
+  "portfolio": {
+    "totalProperties": 3,
+    "occupiedUnits": 3,
+    "vacantUnits": 0,
+    "totalMonthlyRent": 5450,
+    "totalAnnualRent": 65400,
+    "totalDepositsHeld": 10900
+  },
+  "properties": [
+    {
+      "id": "PROP-001",
+      "address": "412 Maple Avenue",
+      "unit": "Apt 3B",
+      "city": "Austin",
+      "state": "TX",
+      "type": "Condo",
+      "bedrooms": 2,
+      "bathrooms": 1,
+      "monthlyRent": 1850,
+      "status": "occupied",
+      "image": "🏢",
+      "tenant": {
+        "name": "Jane Smith",
+        "email": "jane.smith@email.com",
+        "phone": "(555) 123-4567",
+        "leaseStart": "2024-02-01",
+        "leaseExpiry": "2026-01-31",
+        "lastPayment": "2026-02-01",
+        "paymentStatus": "paid"
+      }
+    },
+    {
+      "id": "PROP-002",
+      "address": "87 Riverside Drive",
+      "unit": "House",
+      "city": "Austin",
+      "state": "TX",
+      "type": "Single Family",
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "monthlyRent": 2400,
+      "status": "occupied",
+      "image": "🏠",
+      "tenant": {
+        "name": "Marcus Johnson",
+        "email": "marcus.j@email.com",
+        "phone": "(555) 234-5678",
+        "leaseStart": "2023-06-01",
+        "leaseExpiry": "2025-05-31",
+        "lastPayment": "2026-01-01",
+        "paymentStatus": "overdue"
+      }
+    },
+    {
+      "id": "PROP-003",
+      "address": "201 Oak Street",
+      "unit": "Unit 1A",
+      "city": "Austin",
+      "state": "TX",
+      "type": "Multi-Unit",
+      "bedrooms": 1,
+      "bathrooms": 1,
+      "monthlyRent": 1200,
+      "status": "occupied",
+      "image": "🏘️",
+      "tenant": {
+        "name": "Sofia Martinez",
+        "email": "sofia.m@email.com",
+        "phone": "(555) 345-6789",
+        "leaseStart": "2025-01-01",
+        "leaseExpiry": "2026-12-31",
+        "lastPayment": "2026-02-01",
+        "paymentStatus": "paid"
+      }
+    }
+  ],
+  "accounting": {
+    "monthlyIncome": [
+      { "month": "Sep", "income": 5450, "expenses": 1200 },
+      { "month": "Oct", "income": 5450, "expenses": 980 },
+      { "month": "Nov", "income": 5450, "expenses": 1450 },
+      { "month": "Dec", "income": 5450, "expenses": 2100 },
+      { "month": "Jan", "income": 3050, "expenses": 890 },
+      { "month": "Feb", "income": 4250, "expenses": 1100 }
+    ],
+    "expenseBreakdown": [
+      { "category": "Maintenance & Repairs", "amount": 2340 },
+      { "category": "Property Management", "amount": 1620 },
+      { "category": "Insurance", "amount": 980 },
+      { "category": "Property Tax", "amount": 1800 },
+      { "category": "Utilities", "amount": 560 },
+      { "category": "Miscellaneous", "amount": 420 }
+    ],
+    "ytdIncome": 28700,
+    "ytdExpenses": 7720,
+    "ytdNet": 20980
+  },
+  "maintenanceRequests": [
+    {
+      "id": "MR-001",
+      "property": "412 Maple Avenue",
+      "tenant": "Jane Smith",
+      "title": "Leaking kitchen faucet",
+      "category": "Plumbing",
+      "status": "in_progress",
+      "priority": "medium",
+      "submittedDate": "2026-02-10",
+      "updateNote": "Plumber scheduled for Feb 18th."
+    },
+    {
+      "id": "MR-002",
+      "property": "87 Riverside Drive",
+      "tenant": "Marcus Johnson",
+      "title": "Broken garage door",
+      "category": "Structural",
+      "status": "open",
+      "priority": "high",
+      "submittedDate": "2026-02-15",
+      "updateNote": "Request received. Awaiting contractor quote."
+    },
+    {
+      "id": "MR-003",
+      "property": "201 Oak Street",
+      "tenant": "Sofia Martinez",
+      "title": "Bathroom exhaust fan",
+      "category": "Electrical",
+      "status": "open",
+      "priority": "low",
+      "submittedDate": "2026-02-18",
+      "updateNote": "Request received."
+    },
+    {
+      "id": "MR-004",
+      "property": "87 Riverside Drive",
+      "tenant": "Marcus Johnson",
+      "title": "HVAC not heating properly",
+      "category": "HVAC",
+      "status": "resolved",
+      "priority": "high",
+      "submittedDate": "2026-01-20",
+      "updateNote": "Unit serviced and repaired."
+    }
+  ]
+}
