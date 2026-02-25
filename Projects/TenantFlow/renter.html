@@ -146,6 +146,22 @@
     let activeTab = 'waitlist';
     const API = `http://localhost:${location.port || 3000}`;
 
+    const sessionId = sessionStorage.getItem('tf_session') || (() => {
+      const id = Math.random().toString(36).substring(2, 15);
+      sessionStorage.setItem('tf_session', id);
+      return id;
+    })();
+
+    function track(event, extra = {}) {
+      fetch(`${API}/api/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event, segment: 'renter', sessionId, ...extra })
+      }).catch(() => { });
+    }
+
+    track('page_land');
+
     // ── TAB SWITCHER ──
     function switchTab(tab) {
       activeTab = tab;
@@ -209,6 +225,7 @@
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || 'Server error');
+        track('form_submitted', { email: submittedEmail });
         document.getElementById('form-view').style.display = 'none';
         document.getElementById('verify-sub-text').textContent = `We sent a 6-digit code to ${submittedEmail}. Enter it below to confirm your spot.`;
         document.getElementById('verify-view').style.display = 'block';
@@ -266,6 +283,7 @@
           btn.disabled = false; btn.textContent = 'Verify & Confirm Spot →';
           return;
         }
+        track('verified', { email: submittedEmail });
         document.getElementById('verify-view').style.display = 'none';
         document.getElementById('success-view').style.display = 'block';
       } catch (err) {

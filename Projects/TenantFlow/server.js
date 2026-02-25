@@ -1,58 +1,33 @@
 require('dotenv').config();
 
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+const http       = require('http');
+const fs         = require('fs');
+const path       = require('path');
 const nodemailer = require('nodemailer');
+const Database   = require('better-sqlite3');
 
 const COMPANY_NAME = 'TenantFlow';
-const PORT = process.env.PORT;
-const DATA_DIR = path.join(__dirname, 'data');
+const PORT         = process.env.PORT;
+const GMAIL_USER   = process.env.GMAIL_USER;
+const GMAIL_PASS   = process.env.GMAIL_PASS;
 
-// ── EMAIL CONFIG ──
-const GMAIL_USER = process.env.GMAIL_USER;
-const GMAIL_PASS = process.env.GMAIL_PASS;
+// ── DATABASE ──
+const db = new Database(path.join(__dirname, 'data', 'tenantflow.db'));
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
 
-// // In the event that you find yourself a clone ;) Uncomment 2 lines below and comment 3 lines above
-// GMAIL_USER = your_gmail_here
-// GMAIL_PASS = your_app_password_here
-
+// ── EMAIL ──
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: { user: GMAIL_USER, pass: GMAIL_PASS },
 });
 
-// ── FILE PATHS ──
-const FILES = {
-  renters: path.join(DATA_DIR, 'renters.json'),
-  owners: path.join(DATA_DIR, 'owners.json'),
-};
-
-// Ensure data directory and files exist on startup
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
-Object.values(FILES).forEach(file => {
-  if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify([], null, 2));
-});
-
-// ── IN-MEMORY VERIFICATION STORE ──
-// Holds pending signups until email is verified
-// Structure: { [email]: { code, expiresAt, data, segment } }
+// ── IN-MEMORY PENDING VERIFICATIONS ──
 const pendingVerifications = {};
-
-const CODE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
-
-// IN-MEMORY MAGIC LINK STORE
-// Structure: { [token]: { email, expiresAt } }
-const magicTokens = {};
-const MAGIC_LINK_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
+const CODE_EXPIRY_MS       = 10 * 60 * 1000;
+const MAGIC_LINK_EXPIRY_MS = 15 * 60 * 1000;
 
 // ── HELPERS ──
-function readJSON(file) {
-  return JSON.parse(fs.readFileSync(file, 'utf8'));
-}
-function writeJSON(file, data) {
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
 function sendJSON(res, status, body) {
   res.writeHead(status, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(body));
@@ -68,15 +43,31 @@ function parseBody(req) {
   });
 }
 function generateCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 function generateId(prefix) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   const id = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   return `${prefix}-${id}`;
 }
+function generateToken(length = 48) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
 
-// ── EMAIL SENDER ──
+// ── ANALYTICS ──
+function trackEvent(event, segment, email = null, sessionId = null, metadata = null) {
+  try {
+    db.prepare(`
+      INSERT INTO analytics (session_id, event, segment, email, metadata)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(sessionId, event, segment, email, metadata ? JSON.stringify(metadata) : null);
+  } catch (e) {
+    console.error('Analytics error:', e.message);
+  }
+}
+
+// ── EMAIL SENDERS ──
 async function sendVerificationEmail(toEmail, firstName, code) {
   await transporter.sendMail({
     from: `"${COMPANY_NAME}" <${GMAIL_USER}>`,
@@ -102,18 +93,12 @@ async function sendVerificationEmail(toEmail, firstName, code) {
   });
 }
 
-
-function generateMagicToken() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  return Array.from({ length: 48 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-}
-
-async function sendMagicLinkEmail(toEmail, firstName, token) {
-  const link = `http://localhost:${PORT}/portal.html?token=${token}`;
+async function sendMagicLinkEmail(toEmail, firstName, token, segment) {
+  const link = `http://localhost:${PORT}/api/magic-link/verify?token=${token}`;
   await transporter.sendMail({
-    from: `"TenantFlow" <${GMAIL_USER}>`,
+    from: `"${COMPANY_NAME}" <${GMAIL_USER}>`,
     to: toEmail,
-    subject: `Your TenantFlow sign-in link`,
+    subject: `Your ${COMPANY_NAME} sign-in link`,
     html: `
       <div style="font-family: Georgia, serif; max-width: 520px; margin: 0 auto; padding: 40px 32px; background: #FDFAF5; border-radius: 16px;">
         <h1 style="font-size: 26px; color: #2C3E35; margin-bottom: 8px;">Welcome back, ${firstName}!</h1>
@@ -121,13 +106,13 @@ async function sendMagicLinkEmail(toEmail, firstName, token) {
           Click the button below to sign in to your TenantFlow dashboard. This link expires in 15 minutes.
         </p>
         <a href="${link}" style="display:inline-block; background: #2C3E35; color: #fff; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: bold; margin-bottom: 32px;">
-          Sign In to My Dashboard →
+          Sign In to My Dashboard &rarr;
         </a>
         <p style="color: #B0BDB8; font-size: 13px; line-height: 1.6;">
           If you didn't request this link, you can safely ignore this email.
         </p>
         <hr style="border: none; border-top: 1px solid rgba(44,62,53,0.1); margin: 32px 0;"/>
-        <p style="color: #C4895A; font-size: 13px; font-weight: bold;">TenantFlow</p>
+        <p style="color: #C4895A; font-size: 13px; font-weight: bold;">${COMPANY_NAME}</p>
       </div>
     `,
   });
@@ -136,171 +121,260 @@ async function sendMagicLinkEmail(toEmail, firstName, token) {
 // ── ROUTES ──
 const routes = {
 
-  // STEP 1: Renter submits form → generate code, send email, hold data
+  // POST /api/track
+  'POST /api/track': async (req, res) => {
+    const { event, segment, email, sessionId, metadata } = await parseBody(req);
+    if (!event) return sendJSON(res, 400, { error: 'Event is required.' });
+    trackEvent(event, segment, email || null, sessionId || null, metadata || null);
+    sendJSON(res, 200, { success: true });
+  },
+
+  // POST /api/check-email
+  'POST /api/check-email': async (req, res) => {
+    const { email, type } = await parseBody(req);
+    if (!email) return sendJSON(res, 400, { error: 'Email is required.' });
+    const table = type === 'owner' ? 'owners' : 'renters';
+    const row = db.prepare(`SELECT id FROM ${table} WHERE LOWER(email) = LOWER(?)`).get(email);
+    sendJSON(res, 200, { exists: !!row });
+  },
+
+  // POST /api/waitlist — renter signup
   'POST /api/waitlist': async (req, res) => {
     const data = await parseBody(req);
-    const { firstName, lastName, email, phone } = data;
-
+    const { firstName, lastName, email, phone, sessionId } = data;
     if (!firstName || !lastName || !email || !phone) {
       return sendJSON(res, 400, { error: 'All fields are required.' });
     }
-
-    const existing = readJSON(FILES.renters);
-    if (existing.find(e => e.email.toLowerCase() === email.toLowerCase())) {
-      return sendJSON(res, 409, { error: 'This email is already registered.' });
-    }
+    const existing = db.prepare('SELECT id FROM renters WHERE LOWER(email) = LOWER(?)').get(email);
+    if (existing) return sendJSON(res, 409, { error: 'This email is already registered.' });
 
     const code = generateCode();
     pendingVerifications[email.toLowerCase()] = {
-      code,
-      expiresAt: Date.now() + CODE_EXPIRY_MS,
-      data,
-      segment: 'renter',
+      code, expiresAt: Date.now() + CODE_EXPIRY_MS, data, segment: 'renter',
     };
-
     await sendVerificationEmail(email, firstName, code);
+    trackEvent('form_submitted', 'renter', email, sessionId || null);
     console.log(`📧 Verification code sent to ${email}`);
     sendJSON(res, 200, { success: true, message: 'Verification code sent.' });
   },
 
-  // POST /api/check-email — check if email already exists
-  'POST /api/check-email': async (req, res) => {
-    const { email, type } = await parseBody(req);
-    if (!email) return sendJSON(res, 400, { error: 'Email is required.' });
-
-    const file = type === 'owner' ? FILES.owners : FILES.renters;
-    const existing = readJSON(file);
-
-    const duplicate = type === 'owner'
-      ? existing.find(e => e.basicInfo?.email?.toLowerCase() === email.toLowerCase())
-      : existing.find(e => e.email?.toLowerCase() === email.toLowerCase());
-
-    sendJSON(res, 200, { exists: !!duplicate });
-  },
-
+  // POST /api/owners — owner signup
   'POST /api/owners': async (req, res) => {
     const data = await parseBody(req);
-    const { basicInfo } = data;
-
-    if (!basicInfo || !basicInfo.firstName || !basicInfo.lastName || !basicInfo.email || !basicInfo.phone) {
+    const { basicInfo, sessionId } = data;
+    if (!basicInfo?.firstName || !basicInfo?.lastName || !basicInfo?.email || !basicInfo?.phone) {
       return sendJSON(res, 400, { error: 'Basic info fields are required.' });
     }
-
-    const existing = readJSON(FILES.owners);
-    if (existing.find(e => e.basicInfo?.email?.toLowerCase() === basicInfo.email.toLowerCase())) {
-      return sendJSON(res, 409, { error: 'This email is already registered.' });
-    }
+    const existing = db.prepare('SELECT id FROM owners WHERE LOWER(email) = LOWER(?)').get(basicInfo.email);
+    if (existing) return sendJSON(res, 409, { error: 'This email is already registered.' });
 
     const code = generateCode();
     pendingVerifications[basicInfo.email.toLowerCase()] = {
-      code,
-      expiresAt: Date.now() + CODE_EXPIRY_MS,
-      data,
-      segment: 'owner',
+      code, expiresAt: Date.now() + CODE_EXPIRY_MS, data, segment: 'owner',
     };
-
     await sendVerificationEmail(basicInfo.email, basicInfo.firstName, code);
+    trackEvent('form_submitted', 'owner', basicInfo.email, sessionId || null);
     console.log(`📧 Verification code sent to ${basicInfo.email}`);
     sendJSON(res, 200, { success: true, message: 'Verification code sent.' });
   },
 
-  // STEP 2: Verify code → save to JSON
+  // POST /api/verify — verify code, save to DB
   'POST /api/verify': async (req, res) => {
-    const { email, code } = await parseBody(req);
-
-    if (!email || !code) {
-      return sendJSON(res, 400, { error: 'Email and code are required.' });
-    }
+    const { email, code, sessionId } = await parseBody(req);
+    if (!email || !code) return sendJSON(res, 400, { error: 'Email and code are required.' });
 
     const pending = pendingVerifications[email.toLowerCase()];
-
-    if (!pending) {
-      return sendJSON(res, 404, { error: 'No pending verification found. Please sign up again.' });
-    }
+    if (!pending) return sendJSON(res, 404, { error: 'No pending verification found. Please sign up again.' });
     if (Date.now() > pending.expiresAt) {
       delete pendingVerifications[email.toLowerCase()];
       return sendJSON(res, 410, { error: 'Code has expired. Please sign up again.' });
     }
-    if (pending.code !== code.trim()) {
-      return sendJSON(res, 401, { error: 'Incorrect code. Please try again.' });
-    }
+    if (pending.code !== code.trim()) return sendJSON(res, 401, { error: 'Incorrect code. Please try again.' });
 
-    // Code is valid — save to the appropriate file
     const { data, segment } = pending;
-    const file = segment === 'renter' ? FILES.renters : FILES.owners;
-    const existing = readJSON(file);
+    const userId     = generateId(segment);
+    const verifiedAt = new Date().toISOString();
 
-    data.userId = generateId(segment);
-    data.verifiedAt = new Date().toISOString();
-    existing.push(data);
-    writeJSON(file, existing);
+    if (segment === 'renter') {
+      db.prepare(`
+        INSERT INTO renters (user_id, first_name, last_name, email, phone, segment, verified_at, submitted_at)
+        VALUES (?, ?, ?, ?, ?, 'renter', ?, ?)
+      `).run(userId, data.firstName, data.lastName, data.email, data.phone, verifiedAt, data.submittedAt);
+    } else {
+      const info  = data.basicInfo  || {};
+      const port  = data.portfolio  || {};
+      const pains = data.painPoints || {};
+
+      const result = db.prepare(`
+        INSERT INTO owners
+          (user_id, first_name, last_name, email, phone,
+           property_count, management_style, property_types,
+           challenges, current_tools, additional_notes,
+           segment, verified_at, submitted_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'owner', ?, ?)
+      `).run(
+        userId, info.firstName, info.lastName, info.email, info.phone,
+        port.propertyCount, port.managementStyle,
+        JSON.stringify(port.propertyTypes || []),
+        JSON.stringify(pains.challenges   || []),
+        pains.currentTools, pains.additionalNotes,
+        verifiedAt, data.submittedAt
+      );
+
+      const ownerId = result.lastInsertRowid;
+      const insertProp = db.prepare(`
+        INSERT INTO properties
+          (owner_id, address, bedrooms, bathrooms, lease_status,
+           lease_start, lease_expiry, monthly_rent, deposit)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const p of (data.properties || [])) {
+        insertProp.run(
+          ownerId, p.address, p.bedrooms, p.bathrooms, p.leaseStatus,
+          p.leaseStart, p.leaseExpiry,
+          parseFloat(p.monthlyRent) || null,
+          parseFloat(p.deposit)     || null
+        );
+      }
+    }
 
     delete pendingVerifications[email.toLowerCase()];
-
-    const name = segment === 'renter'
-      ? `${data.firstName} ${data.lastName}`
-      : `${data.basicInfo.firstName} ${data.basicInfo.lastName}`;
-
-    console.log(`✅ Verified & saved ${segment}: ${name} (${email}) — ID: ${data.userId}`);
-    sendJSON(res, 201, { success: true, userId: data.userId });
+    trackEvent('verified', segment, email, sessionId || null);
+    console.log(`✅ Verified & saved ${segment}: ${email} — ID: ${userId}`);
+    sendJSON(res, 201, { success: true, userId });
   },
 
-  // POST /api/magic-link — send sign-in link to existing renter
+  // POST /api/magic-link — send sign-in link
   'POST /api/magic-link': async (req, res) => {
-    const { email } = await parseBody(req);
-
+    const { email, segment = 'renter' } = await parseBody(req);
     if (!email) return sendJSON(res, 400, { error: 'Email is required.' });
 
-    const renters = readJSON(FILES.renters);
-    const renter = renters.find(r => r.email?.toLowerCase() === email.toLowerCase());
-
-    if (!renter) {
-      return sendJSON(res, 404, { error: 'No account found with that email. Please join the waitlist first.' });
+    const table = segment === 'owner' ? 'owners' : 'renters';
+    const user  = db.prepare(`SELECT * FROM ${table} WHERE LOWER(email) = LOWER(?)`).get(email);
+    if (!user) {
+      return sendJSON(res, 404, { error: 'No account found with that email. Please sign up first.' });
     }
 
-    const token = generateMagicToken();
-    magicTokens[token] = { email: email.toLowerCase(), expiresAt: Date.now() + MAGIC_LINK_EXPIRY_MS };
+    const token     = generateToken();
+    const expiresAt = new Date(Date.now() + MAGIC_LINK_EXPIRY_MS).toISOString();
+    db.prepare('INSERT INTO sessions (token, email, segment, expires_at) VALUES (?, ?, ?, ?)').run(
+      token, email.toLowerCase(), segment, expiresAt
+    );
 
-    await sendMagicLinkEmail(email, renter.firstName, token);
-    console.log(`🔗 Magic link sent to ${email}`);
+    await sendMagicLinkEmail(email, user.first_name, token, segment);
+    trackEvent('magic_link_sent', segment, email);
+    console.log(`🔗 Magic link sent to ${email} (${segment})`);
     sendJSON(res, 200, { success: true });
   },
 
-  // GET /api/magic-link/verify — validate token and redirect to portal
+  // GET /api/magic-link/verify — validate token, redirect
   'GET /api/magic-link/verify': async (req, res) => {
-    const url = new URL(req.url, `http://localhost:${PORT}`);
+    const url   = new URL(req.url, `http://localhost:${PORT}`);
     const token = url.searchParams.get('token');
 
-    if (!token || !magicTokens[token]) {
+    if (!token) {
       res.writeHead(302, { Location: '/renter.html?error=invalid_token' });
       return res.end();
     }
 
-    const record = magicTokens[token];
-    if (Date.now() > record.expiresAt) {
-      delete magicTokens[token];
+    const session = db.prepare('SELECT * FROM sessions WHERE token = ? AND used = 0').get(token);
+    if (!session) {
+      res.writeHead(302, { Location: '/renter.html?error=invalid_token' });
+      return res.end();
+    }
+    if (new Date(session.expires_at) < new Date()) {
+      db.prepare('UPDATE sessions SET used = 1 WHERE token = ?').run(token);
       res.writeHead(302, { Location: '/renter.html?error=expired_token' });
       return res.end();
     }
 
-    delete magicTokens[token];
-    console.log(`✅ Magic link login: ${record.email}`);
-    res.writeHead(302, { Location: `/portal.html?auth=${encodeURIComponent(record.email)}` });
+    db.prepare('UPDATE sessions SET used = 1 WHERE token = ?').run(token);
+    trackEvent('magic_link_used', session.segment, session.email);
+    console.log(`✅ Magic link login: ${session.email} (${session.segment})`);
+
+    const dest = session.segment === 'owner' ? 'owner-portal.html' : 'portal.html';
+    res.writeHead(302, { Location: `/${dest}?auth=${encodeURIComponent(session.email)}&segment=${session.segment}` });
     res.end();
+  },
+
+  // GET /api/owner-data — return real owner data for logged-in owner
+  'GET /api/owner-data': async (req, res) => {
+    const url   = new URL(req.url, `http://localhost:${PORT}`);
+    const email = decodeURIComponent(url.searchParams.get('email') || '');
+    if (!email) return sendJSON(res, 400, { error: 'Email is required.' });
+
+    const owner = db.prepare('SELECT * FROM owners WHERE LOWER(email) = LOWER(?)').get(email);
+    if (!owner) return sendJSON(res, 404, { error: 'Owner not found.' });
+
+    const properties = db.prepare('SELECT * FROM properties WHERE owner_id = ?').all(owner.id);
+    const totalMonthlyRent = properties.reduce((sum, p) => sum + (p.monthly_rent || 0), 0);
+    const totalDeposits    = properties.reduce((sum, p) => sum + (p.deposit || 0), 0);
+
+    sendJSON(res, 200, {
+      owner: {
+        userId:         owner.user_id,
+        firstName:      owner.first_name,
+        lastName:       owner.last_name,
+        email:          owner.email,
+        phone:          owner.phone,
+        avatarInitials: `${owner.first_name[0]}${owner.last_name[0]}`.toUpperCase(),
+      },
+      portfolio: {
+        totalProperties:   properties.length,
+        occupiedUnits:     properties.filter(p => p.lease_status === 'active').length,
+        vacantUnits:       properties.filter(p => p.lease_status === 'vacant').length,
+        totalMonthlyRent,
+        totalAnnualRent:   totalMonthlyRent * 12,
+        totalDepositsHeld: totalDeposits,
+      },
+      properties: properties.map(p => ({
+        id:          p.id,
+        address:     p.address,
+        bedrooms:    p.bedrooms,
+        bathrooms:   p.bathrooms,
+        monthlyRent: p.monthly_rent,
+        status:      p.lease_status || 'unknown',
+        leaseStart:  p.lease_start,
+        leaseExpiry: p.lease_expiry,
+        deposit:     p.deposit,
+      })),
+      maintenanceRequests: [],
+    });
+  },
+
+  // GET /api/analytics — funnel summary
+  'GET /api/analytics': async (req, res) => {
+    const url     = new URL(req.url, `http://localhost:${PORT}`);
+    const segment = url.searchParams.get('segment') || 'owner';
+
+    const events = ['page_land','step_1_complete','step_2_complete','step_3_complete','form_submitted','verified'];
+    const funnel = events.map(event => {
+      const row = db.prepare(
+        `SELECT COUNT(DISTINCT COALESCE(session_id, email)) as count
+         FROM analytics WHERE event = ? AND segment = ?`
+      ).get(event, segment);
+      return { event, count: row.count };
+    });
+
+    const recentEvents = db.prepare(
+      `SELECT event, segment, email, created_at FROM analytics ORDER BY created_at DESC LIMIT 50`
+    ).all();
+
+    sendJSON(res, 200, { funnel, recentEvents });
   },
 };
 
 // ── SERVER ──
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   console.log(`Incoming: ${req.method} ${req.url}`);
 
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
 
-  const key = `${req.method} ${req.url.split('?')[0]}`;
+  const key     = `${req.method} ${req.url.split('?')[0]}`;
   const handler = routes[key];
 
   if (handler) {
@@ -311,18 +385,18 @@ const server = http.createServer(async (req, res) => {
       sendJSON(res, 500, { error: 'Internal server error.' });
     }
   } else {
-    // Try serving static files for GET requests (needed for magic link redirect)
     if (req.method === 'GET') {
       let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url.split('?')[0]);
-      console.log(`Serving: ${filePath} — exists: ${fs.existsSync(filePath)}`);
       if (!path.extname(filePath)) filePath += '.html';
       if (fs.existsSync(filePath)) {
         const ext = path.extname(filePath);
-        const mimeTypes = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json' };
+        const mimeTypes = {
+          '.html': 'text/html', '.css': 'text/css',
+          '.js': 'application/javascript', '.json': 'application/json'
+        };
         res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
         return res.end(fs.readFileSync(filePath));
       }
-      console.log(`File not found: ${filePath}`);
     }
     sendJSON(res, 404, { error: 'Route not found.' });
   }
@@ -330,7 +404,6 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`\n🏠 ${COMPANY_NAME} server running at http://localhost:${PORT}`);
-  console.log(`📁 Renters → ${FILES.renters}`);
-  console.log(`📁 Owners  → ${FILES.owners}`);
+  console.log(`🗄️  Database: ${path.join(__dirname, 'data', 'tenantflow.db')}`);
   console.log(`\nWaiting for signups...\n`);
 });

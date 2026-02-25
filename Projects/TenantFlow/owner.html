@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TenantFlow — Property Owners</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles/styles.css" />
   <link rel="stylesheet" href="styles/owner.css" />
   <style>
-    /* VERIFY STATE */
+    .tab-row { display: flex; background: #F5F0E8; border-radius: 12px; padding: 4px; margin-bottom: 1.75rem; }
+    .tab-btn { flex: 1; padding: 0.6rem; border: none; background: none; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; color: #7A8C83; cursor: pointer; transition: background 0.2s, color 0.2s; }
+    .tab-btn.active { background: #fff; color: #2C3E35; box-shadow: 0 1px 4px rgba(44,62,53,0.1); }
     .verify-state { display: none; padding: 0.5rem 0; }
     .verify-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: #2C3E35; margin-bottom: 0.4rem; }
     .verify-sub { font-size: 0.85rem; color: #7A8C83; font-weight: 300; margin-bottom: 1.75rem; line-height: 1.6; }
@@ -25,9 +24,12 @@
     .verify-btn { width: 100%; margin-top: 0.5rem; padding: 0.9rem; background: #2C3E35; color: #fff; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
     .verify-btn:hover { background: #3D5248; }
     .verify-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .magic-sent { display: none; text-align: center; padding: 1rem 0; }
+    .magic-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .magic-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: #2C3E35; margin-bottom: 0.5rem; }
+    .magic-sub { font-size: 0.85rem; color: #7A8C83; line-height: 1.7; max-width: 280px; margin: 0 auto; }
   </style>
 </head>
-
 <body>
 
   <nav>
@@ -41,28 +43,17 @@
       <a href="index.html" class="back-link">← Back</a>
       <p class="panel-eyebrow">For Property Owners</p>
       <h1 class="panel-headline">Your portfolio,<br /><em>finally</em><br />under control.</h1>
-      <p class="panel-sub">Join the waitlist and be first to access a platform built for landlords who are serious about
-        their investment.</p>
+      <p class="panel-sub">Join the waitlist and be first to access a platform built for landlords who are serious about their investment.</p>
       <div class="perks">
-        <div class="perk">
-          <div class="perk-icon">📊</div>
-          <span class="perk-text">Automated accounting & reporting</span>
-        </div>
-        <div class="perk">
-          <div class="perk-icon">💳</div>
-          <span class="perk-text">Rent collection on autopilot</span>
-        </div>
-        <div class="perk">
-          <div class="perk-icon">🔧</div>
-          <span class="perk-text">Maintenance requests, tracked end to end</span>
-        </div>
+        <div class="perk"><div class="perk-icon">📊</div><span class="perk-text">Automated accounting & reporting</span></div>
+        <div class="perk"><div class="perk-icon">💳</div><span class="perk-text">Rent collection on autopilot</span></div>
+        <div class="perk"><div class="perk-icon">🔧</div><span class="perk-text">Maintenance requests, tracked end to end</span></div>
       </div>
     </div>
 
     <!-- RIGHT -->
     <div class="right-panel">
 
-      <!-- Progress (hidden during verify/success) -->
       <div class="progress-wrap" id="progress-wrap">
         <div class="progress-labels">
           <span class="progress-label active" id="lbl-1">Your Info</span>
@@ -75,10 +66,36 @@
         </div>
       </div>
 
-      <!-- Form card -->
       <div class="form-card">
 
-        <!-- STEP 1: Basic Info -->
+        <!-- TAB TOGGLE -->
+        <div class="tab-row" id="tab-row">
+          <button class="tab-btn active" id="tab-signup" onclick="switchTab('signup')">Join Waitlist</button>
+          <button class="tab-btn" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+        </div>
+
+        <!-- SIGN IN FORM -->
+        <div id="signin-form" style="display:none;">
+          <h2 class="step-title">Welcome back</h2>
+          <p class="step-subtitle">Enter your email and we'll send you a secure sign-in link.</p>
+          <div class="form-group">
+            <label for="signin-email">Email Address</label>
+            <input type="email" id="signin-email" placeholder="jane@example.com" autocomplete="email"/>
+            <span class="error-msg" id="signin-email-error">Please enter a valid email address.</span>
+          </div>
+          <p style="font-size:0.8rem;color:#7A8C83;margin-bottom:0.5rem;line-height:1.6;">We'll send a secure sign-in link to your email. No password needed.</p>
+          <button class="btn-next" id="magic-btn" onclick="sendMagicLink()" style="width:100%;margin-top:0.5rem;">Send Sign In Link &rarr;</button>
+        </div>
+
+        <!-- MAGIC LINK SENT -->
+        <div class="magic-sent" id="magic-sent-view">
+          <div class="magic-icon">✉️</div>
+          <h2 class="magic-title">Check your inbox!</h2>
+          <p class="magic-sub" id="magic-sent-sub">We sent a sign-in link to your email. Click it to access your dashboard — it expires in 15 minutes.</p>
+          <p style="margin-top:1.5rem;font-size:0.78rem;color:#B0BDB8;">Wrong email? <button onclick="resetToSignIn()" style="background:none;border:none;color:#C4895A;cursor:pointer;font-size:0.78rem;text-decoration:underline;font-family:'DM Sans',sans-serif;">Try again</button></p>
+        </div>
+
+        <!-- STEP 1 -->
         <div class="step active" id="step-1">
           <h2 class="step-title">Let's start with you</h2>
           <p class="step-subtitle">We just need the basics to reserve your spot.</p>
@@ -105,11 +122,11 @@
             <span class="error-msg" id="phone-error">Please enter a valid phone number</span>
           </div>
           <div class="btn-row">
-            <button class="btn-next" onclick="nextStep(1)">Continue →</button>
+            <button class="btn-next" id="step1-next" onclick="nextStep(1)">Continue &rarr;</button>
           </div>
         </div>
 
-        <!-- STEP 2: Portfolio Overview -->
+        <!-- STEP 2 -->
         <div class="step" id="step-2">
           <h2 class="step-title">Your portfolio</h2>
           <p class="step-subtitle">Tell us about your properties at a high level.</p>
@@ -147,11 +164,11 @@
           </div>
           <div class="btn-row">
             <button class="btn-back" onclick="prevStep(2)">← Back</button>
-            <button class="btn-next" onclick="nextStep(2)">Continue →</button>
+            <button class="btn-next" onclick="nextStep(2)">Continue &rarr;</button>
           </div>
         </div>
 
-        <!-- STEP 3: Property Details -->
+        <!-- STEP 3 -->
         <div class="step" id="step-3">
           <h2 class="step-title">Property details</h2>
           <p class="step-subtitle">Add each property you'd like to manage through TenantFlow.</p>
@@ -159,11 +176,11 @@
           <button class="add-property-btn" onclick="addProperty()">+ Add Another Property</button>
           <div class="btn-row">
             <button class="btn-back" onclick="prevStep(3)">← Back</button>
-            <button class="btn-next" onclick="nextStep(3)">Continue →</button>
+            <button class="btn-next" onclick="nextStep(3)">Continue &rarr;</button>
           </div>
         </div>
 
-        <!-- STEP 4: Pain Points -->
+        <!-- STEP 4 -->
         <div class="step" id="step-4">
           <h2 class="step-title">Current challenges</h2>
           <p class="step-subtitle">Help us build the right things first. This takes 30 seconds.</p>
@@ -195,7 +212,7 @@
           </div>
           <div class="btn-row">
             <button class="btn-back" onclick="prevStep(4)">← Back</button>
-            <button class="btn-submit" id="submit-btn" onclick="submitForm()">Reserve My Spot →</button>
+            <button class="btn-submit" id="submit-btn" onclick="submitForm()">Reserve My Spot &rarr;</button>
           </div>
         </div>
 
@@ -213,7 +230,7 @@
           </div>
           <p class="verify-error" id="verify-error">Incorrect code. Please try again.</p>
           <div class="resend-row">Didn't get it? <button onclick="resendCode()">Resend code</button></div>
-          <button class="verify-btn" id="verify-btn" onclick="verifyCode()">Verify & Confirm Spot →</button>
+          <button class="verify-btn" id="verify-btn" onclick="verifyCode()">Verify & Confirm Spot &rarr;</button>
         </div>
 
         <!-- SUCCESS -->
@@ -229,12 +246,46 @@
   </main>
 
   <script>
-    let currentStep = 1;
-    const totalSteps = 4;
+    let currentStep   = 1;
+    const totalSteps  = 4;
     let propertyCount = 0;
     let submittedEmail = '';
-    let lastPayload = null;
+    let lastPayload    = null;
     const API = `http://localhost:${location.port || 3000}`;
+
+    // ── ANALYTICS ──
+    const sessionId = sessionStorage.getItem('tf_session') || (() => {
+      const id = Math.random().toString(36).substring(2, 15);
+      sessionStorage.setItem('tf_session', id);
+      return id;
+    })();
+
+    function track(event, extra = {}) {
+      fetch(`${API}/api/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event, segment: 'owner', sessionId, ...extra })
+      }).catch(() => {});
+    }
+
+    track('page_land');
+
+    // ── TAB SWITCHER ──
+    function switchTab(tab) {
+      document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+      document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+      document.getElementById('signin-form').style.display      = tab === 'signin'  ? 'block' : 'none';
+      document.getElementById('progress-wrap').style.display    = tab === 'signup'  ? 'block' : 'none';
+      const step1 = document.getElementById('step-1');
+      if (tab === 'signup') { step1.classList.add('active'); }
+      else { step1.classList.remove('active'); }
+    }
+
+    function resetToSignIn() {
+      document.getElementById('magic-sent-view').style.display = 'none';
+      document.getElementById('signin-form').style.display = 'block';
+      document.getElementById('signin-email').value = '';
+    }
 
     // ── PROGRESS ──
     function updateProgress(step) {
@@ -254,10 +305,10 @@
     function prevStep(from) { showStep(from - 1); }
 
     // ── PHONE FORMAT ──
-    document.getElementById('phone').addEventListener('input', function (e) {
+    document.getElementById('phone').addEventListener('input', function(e) {
       let val = e.target.value.replace(/\D/g, '').substring(0, 10);
-      if (val.length >= 7) val = `(${val.substring(0, 3)}) ${val.substring(3, 6)}-${val.substring(6)}`;
-      else if (val.length >= 4) val = `(${val.substring(0, 3)}) ${val.substring(3)}`;
+      if (val.length >= 7) val = `(${val.substring(0,3)}) ${val.substring(3,6)}-${val.substring(6)}`;
+      else if (val.length >= 4) val = `(${val.substring(0,3)}) ${val.substring(3)}`;
       else if (val.length > 0) val = `(${val}`;
       e.target.value = val;
     });
@@ -283,14 +334,14 @@
           { id: 'firstName', check: v => v.trim().length > 0 },
           { id: 'lastName',  check: v => v.trim().length > 0 },
           { id: 'email',     check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
-          { id: 'phone',     check: v => v.replace(/\D/g, '').length >= 10 },
+          { id: 'phone',     check: v => v.replace(/\D/g,'').length >= 10 },
         ].forEach(({ id, check }) => {
           clearError(id);
           if (!check(document.getElementById(id).value)) { showError(id); valid = false; }
         });
       }
       if (step === 2) {
-        ['propertyCount', 'managementStyle'].forEach(id => {
+        ['propertyCount','managementStyle'].forEach(id => {
           clearError(id);
           if (!document.getElementById(id).value) { showError(id); valid = false; }
         });
@@ -301,14 +352,14 @@
       }
       if (step === 3) {
         document.querySelectorAll('.property-card').forEach(card => {
-          ['address', 'bedrooms', 'bathrooms', 'monthlyRent', 'leaseStart', 'leaseExpiry', 'deposit'].forEach(field => {
+          ['address','bedrooms','bathrooms','monthlyRent','leaseStart','leaseExpiry','deposit'].forEach(field => {
             const input = card.querySelector(`[data-field="${field}"]`);
             if (input && !input.value.trim()) { input.classList.add('error'); valid = false; }
             else if (input) input.classList.remove('error');
           });
-          const leaseStatus = card.querySelector('[data-field="leaseStatus"]');
-          if (leaseStatus && !leaseStatus.value) { leaseStatus.classList.add('error'); valid = false; }
-          else if (leaseStatus) leaseStatus.classList.remove('error');
+          const ls = card.querySelector('[data-field="leaseStatus"]');
+          if (ls && !ls.value) { ls.classList.add('error'); valid = false; }
+          else if (ls) ls.classList.remove('error');
         });
         if (propertyCount === 0) { valid = false; alert('Please add at least one property.'); }
       }
@@ -328,13 +379,12 @@
       if (!validateStep(from)) return;
 
       if (from === 1) {
-        const btn = document.querySelector('#step-1 .btn-next');
+        const btn = document.getElementById('step1-next');
         btn.disabled = true;
         btn.textContent = 'Checking...';
         try {
-          const res = await fetch(`${API}/api/check-email`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const res  = await fetch(`${API}/api/check-email`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: document.getElementById('email').value.trim(), type: 'owner' })
           });
           const json = await res.json();
@@ -347,10 +397,14 @@
             document.getElementById('email-error').classList.add('visible');
             return;
           }
-        } catch (err) { /* silent — allow through if check fails */ }
+        } catch (e) { /* silent */ }
         btn.disabled = false;
         btn.textContent = 'Continue →';
+        track('step_1_complete', { email: document.getElementById('email').value.trim() });
       }
+
+      if (from === 2) track('step_2_complete');
+      if (from === 3) track('step_3_complete');
 
       if (from < totalSteps) showStep(from + 1);
     }
@@ -358,7 +412,7 @@
     // ── PROPERTIES ──
     function addProperty() {
       propertyCount++;
-      const idx = propertyCount;
+      const idx  = propertyCount;
       const card = document.createElement('div');
       card.className = 'property-card';
       card.id = `property-${idx}`;
@@ -427,12 +481,11 @@
       if (card) { card.remove(); propertyCount--; }
     }
 
-    addProperty(); // Auto-add first property on load
+    addProperty();
 
     // ── SUBMIT ──
     async function submitForm() {
       if (!validateStep(4)) return;
-
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
@@ -456,6 +509,7 @@
 
       lastPayload = {
         segment: 'owner',
+        sessionId,
         submittedAt: new Date().toISOString(),
         basicInfo: {
           firstName: document.getElementById('firstName').value.trim(),
@@ -464,7 +518,7 @@
           phone:     document.getElementById('phone').value.trim(),
         },
         portfolio: {
-          propertyCount:  document.getElementById('propertyCount').value,
+          propertyCount:   document.getElementById('propertyCount').value,
           managementStyle: document.getElementById('managementStyle').value,
           propertyTypes,
         },
@@ -479,17 +533,16 @@
       submittedEmail = lastPayload.basicInfo.email;
 
       try {
-        const res = await fetch(`${API}/api/owners`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res  = await fetch(`${API}/api/owners`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(lastPayload)
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || 'Server error');
 
-        // Hide steps and progress, show verify screen
         document.querySelectorAll('.step').forEach(s => s.style.display = 'none');
         document.getElementById('progress-wrap').style.display = 'none';
+        document.getElementById('tab-row').style.display = 'none';
         document.getElementById('verify-sub-text').textContent = `We sent a 6-digit code to ${submittedEmail}. Enter it below to confirm your spot.`;
         document.getElementById('verify-view').style.display = 'block';
         initCodeInputs();
@@ -515,7 +568,7 @@
         });
         input.addEventListener('paste', e => {
           e.preventDefault();
-          const pasted = e.clipboardData.getData('text').replace(/\D/g, '').substring(0, 6);
+          const pasted = e.clipboardData.getData('text').replace(/\D/g,'').substring(0, 6);
           pasted.split('').forEach((char, j) => { if (inputs[j]) inputs[j].value = char; });
           inputs[Math.min(pasted.length, inputs.length - 1)].focus();
         });
@@ -537,12 +590,10 @@
       const btn = document.getElementById('verify-btn');
       btn.disabled = true;
       btn.textContent = 'Verifying...';
-
       try {
-        const res = await fetch(`${API}/api/verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: submittedEmail, code })
+        const res  = await fetch(`${API}/api/verify`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: submittedEmail, code, sessionId })
         });
         const json = await res.json();
         if (!res.ok) {
@@ -554,7 +605,6 @@
         }
         document.getElementById('verify-view').style.display = 'none';
         document.getElementById('success-view').style.display = 'block';
-
       } catch (err) {
         document.getElementById('verify-error').textContent = 'Something went wrong. Please try again.';
         document.getElementById('verify-error').classList.add('visible');
@@ -568,8 +618,7 @@
       if (!lastPayload) return;
       try {
         await fetch(`${API}/api/owners`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(lastPayload)
         });
         document.getElementById('verify-error').classList.remove('visible');
@@ -578,6 +627,38 @@
         alert('A new code has been sent!');
       } catch (err) {
         alert('Could not resend. Make sure the server is running.');
+      }
+    }
+
+    // ── MAGIC LINK SIGN IN ──
+    async function sendMagicLink() {
+      const emailInput = document.getElementById('signin-email');
+      const errorEl   = document.getElementById('signin-email-error');
+      const email     = emailInput.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailInput.classList.add('error');
+        errorEl.classList.add('visible');
+        return;
+      }
+      emailInput.classList.remove('error');
+      errorEl.classList.remove('visible');
+      const btn = document.getElementById('magic-btn');
+      btn.disabled = true;
+      btn.textContent = 'Sending link...';
+      try {
+        const res  = await fetch(`${API}/api/magic-link`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, segment: 'owner' })
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Server error');
+        document.getElementById('signin-form').style.display = 'none';
+        document.getElementById('magic-sent-sub').textContent = `We sent a sign-in link to ${email}. Click it to access your dashboard — it expires in 15 minutes.`;
+        document.getElementById('magic-sent-view').style.display = 'block';
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Send Sign In Link →';
+        alert(err.message || 'Something went wrong. Make sure the server is running.');
       }
     }
   </script>

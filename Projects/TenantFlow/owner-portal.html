@@ -182,13 +182,70 @@
     let revenueChartInstance, occupancyChartInstance, accountingChartInstance, expenseChartInstance;
 
     // ── LOAD DATA ──
+    const API = `http://localhost:${location.port || 3000}`;
+
     async function loadData() {
-      try {
-        const res = await fetch('owner-data.json');
-        ownerData = await res.json();
-        allMaintenanceRequests = ownerData.maintenanceRequests;
-        renderAll();
-      } catch (e) { console.error('Could not load owner-data.json', e); }
+      const params = new URLSearchParams(window.location.search);
+      const auth = params.get('auth');
+      const error = params.get('error');
+
+      if (error === 'invalid_token') {
+        alert('This sign-in link is invalid. Please request a new one.');
+        window.location.href = 'owner.html';
+        return;
+      }
+      if (error === 'expired_token') {
+        alert('This sign-in link has expired. Please request a new one.');
+        window.location.href = 'owner.html';
+        return;
+      }
+
+      window.history.replaceState({}, '', 'owner-portal.html');
+
+      if (auth) {
+        try {
+          const res = await fetch(`${API}/api/owner-data?email=${encodeURIComponent(auth)}`);
+          if (!res.ok) throw new Error('Could not load your data.');
+          ownerData = await res.json();
+
+          // Accounting uses placeholder data until Sprint 6
+          ownerData.accounting = {
+            monthlyIncome: [
+              { month: 'Sep', income: ownerData.portfolio.totalMonthlyRent, expenses: 1200 },
+              { month: 'Oct', income: ownerData.portfolio.totalMonthlyRent, expenses: 980 },
+              { month: 'Nov', income: ownerData.portfolio.totalMonthlyRent, expenses: 1450 },
+              { month: 'Dec', income: ownerData.portfolio.totalMonthlyRent, expenses: 2100 },
+              { month: 'Jan', income: ownerData.portfolio.totalMonthlyRent, expenses: 890 },
+              { month: 'Feb', income: ownerData.portfolio.totalMonthlyRent, expenses: 1100 },
+            ],
+            expenseBreakdown: [
+              { category: 'Maintenance & Repairs', amount: 2340 },
+              { category: 'Property Management', amount: 1620 },
+              { category: 'Insurance', amount: 980 },
+              { category: 'Property Tax', amount: 1800 },
+              { category: 'Utilities', amount: 560 },
+              { category: 'Miscellaneous', amount: 420 },
+            ],
+            ytdIncome: ownerData.portfolio.totalMonthlyRent * 2,
+            ytdExpenses: 7720,
+            ytdNet: (ownerData.portfolio.totalMonthlyRent * 2) - 7720,
+          };
+
+          allMaintenanceRequests = ownerData.maintenanceRequests || [];
+          renderAll();
+        } catch (e) {
+          alert(e.message);
+          window.location.href = 'owner.html';
+        }
+      } else {
+        // No auth — fall back to demo data for preview
+        try {
+          const res = await fetch('owner-data.json');
+          ownerData = await res.json();
+          allMaintenanceRequests = ownerData.maintenanceRequests;
+          renderAll();
+        } catch (e) { console.error('Could not load owner-data.json', e); }
+      }
     }
 
     // ── VIEW SWITCHER ──
@@ -370,23 +427,29 @@
 
     // ── RENT ROLL ──
     function renderRentRoll(properties) {
-      const paid = properties.filter(p => p.tenant.paymentStatus === 'paid').length;
-      const overdue = properties.filter(p => p.tenant.paymentStatus === 'overdue').length;
+      const paid = properties.filter(p => p.tenant?.paymentStatus === 'paid').length;
+      const overdue = properties.filter(p => p.tenant?.paymentStatus === 'overdue').length;
+
       document.getElementById('rentroll-summary').innerHTML = `
-      <span style="font-size:0.82rem;font-weight:400;color:var(--muted);">
-        ${statusBadge('paid')} ${paid} paid &nbsp; ${statusBadge('overdue')} ${overdue} overdue
-      </span>
-    `;
+        <span style="font-size:0.82rem;font-weight:400;color:var(--muted);">
+          ${statusBadge('paid')} ${paid} paid &nbsp; ${statusBadge('overdue')} ${overdue} overdue
+        </span>
+      `;
+
       document.getElementById('rentroll-body').innerHTML = properties.map(p => `
-      <tr>
-        <td><strong>${p.tenant.name}</strong><br/><span style="font-size:0.75rem;color:var(--muted);">${p.tenant.email}</span></td>
-        <td>${p.address}<br/><span style="font-size:0.75rem;color:var(--muted);">${p.unit}</span></td>
-        <td><strong>${formatCurrency(p.monthlyRent)}</strong></td>
-        <td>${formatDate(p.tenant.lastPayment)}</td>
-        <td>${formatDate(p.tenant.leaseExpiry)}</td>
-        <td>${statusBadge(p.tenant.paymentStatus)}</td>
-      </tr>
-    `).join('');
+        <tr>
+          <td><strong>${p.tenant?.name || '—'}</strong><br/>
+            <span style="font-size:0.75rem;color:var(--muted);">${p.tenant?.email || 'No tenant assigned'}</span>
+          </td>
+          <td>${p.address}<br/>
+            <span style="font-size:0.75rem;color:var(--muted);">${p.unit || ''}</span>
+          </td>
+          <td><strong>${formatCurrency(p.monthlyRent || 0)}</strong></td>
+          <td>${p.tenant?.lastPayment ? formatDate(p.tenant.lastPayment) : '—'}</td>
+          <td>${p.leaseExpiry ? formatDate(p.leaseExpiry) : '—'}</td>
+          <td>${p.tenant?.paymentStatus ? statusBadge(p.tenant.paymentStatus) : statusBadge(p.status)}</td>
+        </tr>
+      `).join('');
     }
 
     // ── YTD ──
@@ -430,40 +493,42 @@
     // ── PROPERTIES ──
     function renderProperties(properties) {
       document.getElementById('property-grid').innerHTML = properties.map(p => `
-      <div class="property-card">
-        <div class="property-emoji">${p.image}</div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.25rem;">
-          <div class="property-address">${p.address}</div>
-          ${statusBadge(p.status)}
+        <div class="property-card">
+          <div class="property-emoji">${p.image || '🏠'}</div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.25rem;">
+            <div class="property-address">${p.address}</div>
+            ${statusBadge(p.status)}
+          </div>
+          <div class="property-meta">${p.unit || ''} ${p.bedrooms || '?'} bed / ${p.bathrooms || '?'} bath</div>
+          <div style="font-size:0.82rem;color:var(--muted);">Tenant: <strong style="color:var(--slate);">${p.tenant?.name || 'Unassigned'}</strong></div>
+          <div class="property-stats">
+            <div><div class="property-stat-label">Monthly Rent</div><div class="property-stat-value">${formatCurrency(p.monthlyRent || 0)}</div></div>
+            <div><div class="property-stat-label">Bedrooms</div><div class="property-stat-value">${p.bedrooms || '—'} bed / ${p.bathrooms || '—'} bath</div></div>
+            <div><div class="property-stat-label">Lease Expires</div><div class="property-stat-value">${p.leaseExpiry ? formatDate(p.leaseExpiry) : '—'}</div></div>
+            <div><div class="property-stat-label">Status</div><div class="property-stat-value">${statusBadge(p.status)}</div></div>
+          </div>
         </div>
-        <div class="property-meta">${p.unit} · ${p.city}, ${p.state} · ${p.type}</div>
-        <div style="font-size:0.82rem;color:var(--muted);">Tenant: <strong style="color:var(--slate);">${p.tenant.name}</strong></div>
-        <div class="property-stats">
-          <div><div class="property-stat-label">Monthly Rent</div><div class="property-stat-value">${formatCurrency(p.monthlyRent)}</div></div>
-          <div><div class="property-stat-label">Bedrooms</div><div class="property-stat-value">${p.bedrooms} bed / ${p.bathrooms} bath</div></div>
-          <div><div class="property-stat-label">Lease Expires</div><div class="property-stat-value">${formatDate(p.tenant.leaseExpiry)}</div></div>
-          <div><div class="property-stat-label">Payment</div><div class="property-stat-value">${statusBadge(p.tenant.paymentStatus)}</div></div>
-        </div>
-      </div>
-    `).join('');
+      `).join('');
     }
 
     // ── TENANTS ──
     function renderTenants(properties) {
-      document.getElementById('tenant-grid').innerHTML = properties.map(p => `
-      <div class="tenant-card">
-        <div class="tenant-avatar">${initials(p.tenant.name)}</div>
-        <div class="tenant-name">${p.tenant.name}</div>
-        <div class="tenant-property">📍 ${p.address}, ${p.unit}</div>
-        <div class="tenant-details">
-          <div class="tenant-detail-row"><span>Email</span><span>${p.tenant.email}</span></div>
-          <div class="tenant-detail-row"><span>Phone</span><span>${p.tenant.phone}</span></div>
-          <div class="tenant-detail-row"><span>Monthly Rent</span><span>${formatCurrency(p.monthlyRent)}</span></div>
-          <div class="tenant-detail-row"><span>Lease Expires</span><span>${formatDate(p.tenant.leaseExpiry)}</span></div>
-          <div class="tenant-detail-row"><span>Payment Status</span><span>${statusBadge(p.tenant.paymentStatus)}</span></div>
-        </div>
-      </div>
-    `).join('');
+      const withTenants = properties.filter(p => p.tenant?.name);
+      document.getElementById('tenant-grid').innerHTML = withTenants.length === 0
+        ? `<p style="color:var(--muted);font-size:0.88rem;">No tenant information available yet.</p>`
+        : withTenants.map(p => `
+          <div class="tenant-card">
+            <div class="tenant-avatar">${initials(p.tenant.name)}</div>
+            <div class="tenant-name">${p.tenant.name}</div>
+            <div class="tenant-property">📍 ${p.address}</div>
+            <div class="tenant-details">
+              <div class="tenant-detail-row"><span>Email</span><span>${p.tenant.email || '—'}</span></div>
+              <div class="tenant-detail-row"><span>Monthly Rent</span><span>${formatCurrency(p.monthlyRent || 0)}</span></div>
+              <div class="tenant-detail-row"><span>Lease Expires</span><span>${p.leaseExpiry ? formatDate(p.leaseExpiry) : '—'}</span></div>
+              <div class="tenant-detail-row"><span>Payment Status</span><span>${p.tenant?.paymentStatus ? statusBadge(p.tenant.paymentStatus) : '—'}</span></div>
+            </div>
+          </div>
+        `).join('');
     }
 
     // ── PROFILE ──
