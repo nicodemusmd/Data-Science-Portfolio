@@ -1,16 +1,21 @@
+require('dotenv').config();
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
 
 const COMPANY_NAME = 'TenantFlow';
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 const DATA_DIR = path.join(__dirname, 'data');
 
 // ── EMAIL CONFIG ──
-// Replace YOUR_APP_PASSWORD with the 16-character Google App Password you generated
-const GMAIL_USER = 'Nicodemus.MichaelD@gmail.com';
-const GMAIL_PASS = 'qjkw kpjh qfia gprb';
+const GMAIL_USER = process.env.GMAIL_USER;
+const GMAIL_PASS = process.env.GMAIL_PASS;
+
+// // In the event that you find yourself a clone ;) Uncomment 2 lines below and comment 3 lines above
+// GMAIL_USER = your_gmail_here
+// GMAIL_PASS = your_app_password_here
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -158,7 +163,21 @@ const routes = {
     sendJSON(res, 200, { success: true, message: 'Verification code sent.' });
   },
 
-  // STEP 1: Owner submits form → generate code, send email, hold data
+  // POST /api/check-email — check if email already exists
+  'POST /api/check-email': async (req, res) => {
+    const { email, type } = await parseBody(req);
+    if (!email) return sendJSON(res, 400, { error: 'Email is required.' });
+
+    const file = type === 'owner' ? FILES.owners : FILES.renters;
+    const existing = readJSON(file);
+
+    const duplicate = type === 'owner'
+      ? existing.find(e => e.basicInfo?.email?.toLowerCase() === email.toLowerCase())
+      : existing.find(e => e.email?.toLowerCase() === email.toLowerCase());
+
+    sendJSON(res, 200, { exists: !!duplicate });
+  },
+
   'POST /api/owners': async (req, res) => {
     const data = await parseBody(req);
     const { basicInfo } = data;

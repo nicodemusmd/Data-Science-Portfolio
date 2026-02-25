@@ -1,39 +1,41 @@
 [
   {
     "segment": "owner",
-    "submittedAt": "2026-02-21T06:35:28.072Z",
+    "submittedAt": "2026-02-25T02:05:19.529Z",
     "basicInfo": {
       "firstName": "Michael",
       "lastName": "Nicodemus",
       "email": "nicodemus.michaeld@gmail.com",
-      "phone": "(760) 583-6055"
+      "phone": "(176) 058-3605"
     },
     "portfolio": {
       "propertyCount": "1",
       "managementStyle": "self",
       "propertyTypes": [
-        "condo"
+        "single-family"
       ]
     },
     "properties": [
       {
-        "address": "1000 W MacArthur Blvd Apt122",
+        "address": "1000 W Macarthur Blvd",
         "bedrooms": "1",
         "bathrooms": "1",
         "leaseStatus": "expiring",
-        "leaseStart": "2026-01-01",
-        "leaseExpiry": "2026-02-27",
-        "monthlyRent": "2100",
+        "leaseStart": "2025-04-01",
+        "leaseExpiry": "2026-04-01",
+        "monthlyRent": "1900",
         "deposit": "1900"
       }
     ],
     "painPoints": {
       "challenges": [
-        "accounting",
-        "communication"
+        "rent-collection",
+        "accounting"
       ],
       "currentTools": "spreadsheets",
-      "additionalNotes": "Waiting my entire life for this!"
-    }
+      "additionalNotes": "!!!!!!!!!!1"
+    },
+    "userId": "owner-FNXI7X15",
+    "verifiedAt": "2026-02-25T02:05:33.520Z"
   }
 ]

@@ -4,18 +4,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TenetFlow — Property Owners</title>
+  <title>TenantFlow — Property Owners</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="styles/styles.css" />
   <link rel="stylesheet" href="styles/owner.css" />
+  <style>
+    /* VERIFY STATE */
+    .verify-state { display: none; padding: 0.5rem 0; }
+    .verify-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: #2C3E35; margin-bottom: 0.4rem; }
+    .verify-sub { font-size: 0.85rem; color: #7A8C83; font-weight: 300; margin-bottom: 1.75rem; line-height: 1.6; }
+    .code-inputs { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.25rem; }
+    .code-inputs input { width: 46px; height: 56px; text-align: center; font-size: 1.4rem; font-weight: 700; border: 1.5px solid rgba(44,62,53,0.15); border-radius: 10px; background: #FDFAF5; padding: 0; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .code-inputs input:focus { border-color: #C4895A; box-shadow: 0 0 0 3px rgba(196,137,90,0.12); }
+    .verify-error { font-size: 0.8rem; color: #E05252; text-align: center; margin-bottom: 0.75rem; display: none; }
+    .verify-error.visible { display: block; }
+    .resend-row { text-align: center; margin-bottom: 1rem; font-size: 0.8rem; color: #7A8C83; }
+    .resend-row button { background: none; border: none; color: #C4895A; cursor: pointer; font-size: 0.8rem; font-family: 'DM Sans', sans-serif; text-decoration: underline; padding: 0; }
+    .verify-btn { width: 100%; margin-top: 0.5rem; padding: 0.9rem; background: #2C3E35; color: #fff; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+    .verify-btn:hover { background: #3D5248; }
+    .verify-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
 </head>
 
 <body>
 
   <nav>
-    <div class="logo">Tenet<span>Flow</span></div>
+    <div class="logo">Tenant<span>Flow</span></div>
     <a href="index.html">Back to home</a>
   </nav>
 
@@ -46,8 +62,8 @@
     <!-- RIGHT -->
     <div class="right-panel">
 
-      <!-- Progress -->
-      <div class="progress-wrap">
+      <!-- Progress (hidden during verify/success) -->
+      <div class="progress-wrap" id="progress-wrap">
         <div class="progress-labels">
           <span class="progress-label active" id="lbl-1">Your Info</span>
           <span class="progress-label" id="lbl-2">Portfolio</span>
@@ -122,12 +138,9 @@
           <div class="form-group">
             <label>What property types do you have? (Select all that apply)</label>
             <div class="checkbox-group">
-              <label class="checkbox-item"><input type="checkbox" value="single-family" /> <span>Single family
-                  home</span></label>
-              <label class="checkbox-item"><input type="checkbox" value="multi-unit" /> <span>Multi-unit /
-                  Duplex</span></label>
-              <label class="checkbox-item"><input type="checkbox" value="condo" /> <span>Condo /
-                  Apartment</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="single-family" /> <span>Single family home</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="multi-unit" /> <span>Multi-unit / Duplex</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="condo" /> <span>Condo / Apartment</span></label>
               <label class="checkbox-item"><input type="checkbox" value="commercial" /> <span>Commercial</span></label>
             </div>
             <span class="error-msg" id="propertyTypes-error">Please select at least one</span>
@@ -141,14 +154,9 @@
         <!-- STEP 3: Property Details -->
         <div class="step" id="step-3">
           <h2 class="step-title">Property details</h2>
-          <p class="step-subtitle">Add each property you'd like to manage through TenetFlow.</p>
-
-          <div class="properties-list" id="properties-list">
-            <!-- Injected by JS -->
-          </div>
-
+          <p class="step-subtitle">Add each property you'd like to manage through TenantFlow.</p>
+          <div class="properties-list" id="properties-list"></div>
           <button class="add-property-btn" onclick="addProperty()">+ Add Another Property</button>
-
           <div class="btn-row">
             <button class="btn-back" onclick="prevStep(3)">← Back</button>
             <button class="btn-next" onclick="nextStep(3)">Continue →</button>
@@ -162,16 +170,11 @@
           <div class="form-group">
             <label>What's your biggest headache right now? (Select all that apply)</label>
             <div class="checkbox-group">
-              <label class="checkbox-item"><input type="checkbox" value="rent-collection" /> <span>Chasing rent
-                  payments</span></label>
-              <label class="checkbox-item"><input type="checkbox" value="maintenance" /> <span>Tracking maintenance
-                  requests</span></label>
-              <label class="checkbox-item"><input type="checkbox" value="accounting" /> <span>Accounting &
-                  bookkeeping</span></label>
-              <label class="checkbox-item"><input type="checkbox" value="communication" /> <span>Communicating with
-                  tenants</span></label>
-              <label class="checkbox-item"><input type="checkbox" value="leases" /> <span>Managing lease
-                  documents</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="rent-collection" /> <span>Chasing rent payments</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="maintenance" /> <span>Tracking maintenance requests</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="accounting" /> <span>Accounting & bookkeeping</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="communication" /> <span>Communicating with tenants</span></label>
+              <label class="checkbox-item"><input type="checkbox" value="leases" /> <span>Managing lease documents</span></label>
             </div>
             <span class="error-msg" id="painPoints-error">Please select at least one</span>
           </div>
@@ -187,10 +190,8 @@
             <span class="error-msg" id="currentTools-error">Please select an option</span>
           </div>
           <div class="form-group">
-            <label for="additionalNotes">Anything else you'd like us to know? <span
-                style="color:#B0BDB8;font-size:0.7rem;text-transform:none;">(Optional)</span></label>
-            <textarea id="additionalNotes"
-              placeholder="Tell us what would make TenetFlow perfect for you..."></textarea>
+            <label for="additionalNotes">Anything else you'd like us to know? <span style="color:#B0BDB8;font-size:0.7rem;text-transform:none;">(Optional)</span></label>
+            <textarea id="additionalNotes" placeholder="Tell us what would make TenantFlow perfect for you..."></textarea>
           </div>
           <div class="btn-row">
             <button class="btn-back" onclick="prevStep(4)">← Back</button>
@@ -198,12 +199,28 @@
           </div>
         </div>
 
+        <!-- VERIFY -->
+        <div class="verify-state" id="verify-view">
+          <h2 class="verify-title">Check your email</h2>
+          <p class="verify-sub" id="verify-sub-text">We sent a 6-digit code to your email. Enter it below to confirm your spot.</p>
+          <div class="code-inputs" id="code-inputs">
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+            <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+          </div>
+          <p class="verify-error" id="verify-error">Incorrect code. Please try again.</p>
+          <div class="resend-row">Didn't get it? <button onclick="resendCode()">Resend code</button></div>
+          <button class="verify-btn" id="verify-btn" onclick="verifyCode()">Verify & Confirm Spot →</button>
+        </div>
+
         <!-- SUCCESS -->
         <div class="success-state" id="success-view">
           <div class="success-icon">🎉</div>
           <h2 class="success-title">You're on the list!</h2>
-          <p class="success-sub">Thanks for the detail — it'll directly shape what we build first. We'll be in touch
-            soon.</p>
+          <p class="success-sub">Thanks for the detail — it'll directly shape what we build first. We'll be in touch soon.</p>
           <a href="index.html" class="back-home">Back to Home</a>
         </div>
 
@@ -215,7 +232,10 @@
     let currentStep = 1;
     const totalSteps = 4;
     let propertyCount = 0;
-    const API = 'http://localhost:${location.port || 3000}';
+    let submittedEmail = '';
+    let lastPayload = null;
+    const API = `http://localhost:${location.port || 3000}`;
+
     // ── PROGRESS ──
     function updateProgress(step) {
       document.getElementById('progress-fill').style.width = `${(step / totalSteps) * 100}%`;
@@ -245,7 +265,7 @@
     // ── VALIDATION ──
     function clearError(id) {
       const el = document.getElementById(id);
-      if (el) { el.classList.remove('error'); }
+      if (el) el.classList.remove('error');
       const err = document.getElementById(`${id}-error`);
       if (err) err.classList.remove('visible');
     }
@@ -258,19 +278,17 @@
 
     function validateStep(step) {
       let valid = true;
-
       if (step === 1) {
         [
           { id: 'firstName', check: v => v.trim().length > 0 },
-          { id: 'lastName', check: v => v.trim().length > 0 },
-          { id: 'email', check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
-          { id: 'phone', check: v => v.replace(/\D/g, '').length >= 10 },
+          { id: 'lastName',  check: v => v.trim().length > 0 },
+          { id: 'email',     check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) },
+          { id: 'phone',     check: v => v.replace(/\D/g, '').length >= 10 },
         ].forEach(({ id, check }) => {
           clearError(id);
           if (!check(document.getElementById(id).value)) { showError(id); valid = false; }
         });
       }
-
       if (step === 2) {
         ['propertyCount', 'managementStyle'].forEach(id => {
           clearError(id);
@@ -281,17 +299,12 @@
         if (checked.length === 0) { err.classList.add('visible'); valid = false; }
         else err.classList.remove('visible');
       }
-
       if (step === 3) {
-        // Validate each property card
-        document.querySelectorAll('.property-card').forEach((card, i) => {
+        document.querySelectorAll('.property-card').forEach(card => {
           ['address', 'bedrooms', 'bathrooms', 'monthlyRent', 'leaseStart', 'leaseExpiry', 'deposit'].forEach(field => {
             const input = card.querySelector(`[data-field="${field}"]`);
-            if (input && !input.value.trim()) {
-              input.classList.add('error'); valid = false;
-            } else if (input) {
-              input.classList.remove('error');
-            }
+            if (input && !input.value.trim()) { input.classList.add('error'); valid = false; }
+            else if (input) input.classList.remove('error');
           });
           const leaseStatus = card.querySelector('[data-field="leaseStatus"]');
           if (leaseStatus && !leaseStatus.value) { leaseStatus.classList.add('error'); valid = false; }
@@ -299,22 +312,46 @@
         });
         if (propertyCount === 0) { valid = false; alert('Please add at least one property.'); }
       }
-
       if (step === 4) {
         const checked = document.querySelectorAll('#step-4 input[type="checkbox"]:checked');
         const err = document.getElementById('painPoints-error');
         if (checked.length === 0) { err.classList.add('visible'); valid = false; }
         else err.classList.remove('visible');
-
         clearError('currentTools');
         if (!document.getElementById('currentTools').value) { showError('currentTools'); valid = false; }
       }
-
       return valid;
     }
 
-    function nextStep(from) {
+    // ── NEXT STEP ──
+    async function nextStep(from) {
       if (!validateStep(from)) return;
+
+      if (from === 1) {
+        const btn = document.querySelector('#step-1 .btn-next');
+        btn.disabled = true;
+        btn.textContent = 'Checking...';
+        try {
+          const res = await fetch(`${API}/api/check-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: document.getElementById('email').value.trim(), type: 'owner' })
+          });
+          const json = await res.json();
+          if (json.exists) {
+            btn.disabled = false;
+            btn.textContent = 'Continue →';
+            const emailInput = document.getElementById('email');
+            emailInput.classList.add('error');
+            document.getElementById('email-error').textContent = 'This email is already registered. Please sign in instead.';
+            document.getElementById('email-error').classList.add('visible');
+            return;
+          }
+        } catch (err) { /* silent — allow through if check fails */ }
+        btn.disabled = false;
+        btn.textContent = 'Continue →';
+      }
+
       if (from < totalSteps) showStep(from + 1);
     }
 
@@ -322,69 +359,67 @@
     function addProperty() {
       propertyCount++;
       const idx = propertyCount;
-      const list = document.getElementById('properties-list');
-
       const card = document.createElement('div');
       card.className = 'property-card';
       card.id = `property-${idx}`;
       card.innerHTML = `
-      <div class="property-card-header">
-        <span class="property-card-title">Property ${idx}</span>
-        ${idx > 1 ? `<button class="remove-property" onclick="removeProperty(${idx})">Remove</button>` : ''}
-      </div>
-      <div class="form-group">
-        <label>Street Address</label>
-        <input type="text" data-field="address" placeholder="123 Main St, City, State, ZIP"/>
-      </div>
-      <div class="form-row">
+        <div class="property-card-header">
+          <span class="property-card-title">Property ${idx}</span>
+          ${idx > 1 ? `<button class="remove-property" onclick="removeProperty(${idx})">Remove</button>` : ''}
+        </div>
         <div class="form-group">
-          <label>Bedrooms</label>
-          <select data-field="bedrooms">
-            <option value="">Select</option>
-            <option>Studio</option><option>1</option><option>2</option>
-            <option>3</option><option>4</option><option>5+</option>
+          <label>Street Address</label>
+          <input type="text" data-field="address" placeholder="123 Main St, City, State, ZIP"/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Bedrooms</label>
+            <select data-field="bedrooms">
+              <option value="">Select</option>
+              <option>Studio</option><option>1</option><option>2</option>
+              <option>3</option><option>4</option><option>5+</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Bathrooms</label>
+            <select data-field="bathrooms">
+              <option value="">Select</option>
+              <option>1</option><option>1.5</option><option>2</option>
+              <option>2.5</option><option>3</option><option>3+</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Lease Status</label>
+          <select data-field="leaseStatus">
+            <option value="">Select...</option>
+            <option value="active">Active — tenant currently living here</option>
+            <option value="expiring">Expiring soon</option>
+            <option value="vacant">Vacant — no current tenant</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Bathrooms</label>
-          <select data-field="bathrooms">
-            <option value="">Select</option>
-            <option>1</option><option>1.5</option><option>2</option>
-            <option>2.5</option><option>3</option><option>3+</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Lease Start Date</label>
+            <input type="date" data-field="leaseStart"/>
+          </div>
+          <div class="form-group">
+            <label>Lease Expiry Date</label>
+            <input type="date" data-field="leaseExpiry"/>
+          </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label>Lease Status</label>
-        <select data-field="leaseStatus">
-          <option value="">Select...</option>
-          <option value="active">Active — tenant currently living here</option>
-          <option value="expiring">Expiring soon</option>
-          <option value="vacant">Vacant — no current tenant</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Lease Start Date</label>
-          <input type="date" data-field="leaseStart"/>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Monthly Rent ($)</label>
+            <input type="number" data-field="monthlyRent" placeholder="e.g. 1800" min="0"/>
+          </div>
+          <div class="form-group">
+            <label>Security Deposit ($)</label>
+            <input type="number" data-field="deposit" placeholder="e.g. 3600" min="0"/>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Lease Expiry Date</label>
-          <input type="date" data-field="leaseExpiry"/>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Monthly Rent ($)</label>
-          <input type="number" data-field="monthlyRent" placeholder="e.g. 1800" min="0"/>
-        </div>
-        <div class="form-group">
-          <label>Security Deposit ($)</label>
-          <input type="number" data-field="deposit" placeholder="e.g. 3600" min="0"/>
-        </div>
-      </div>
-    `;
-      list.appendChild(card);
+      `;
+      document.getElementById('properties-list').appendChild(card);
     }
 
     function removeProperty(idx) {
@@ -392,8 +427,7 @@
       if (card) { card.remove(); propertyCount--; }
     }
 
-    // Auto-add first property on load
-    addProperty();
+    addProperty(); // Auto-add first property on load
 
     // ── SUBMIT ──
     async function submitForm() {
@@ -403,67 +437,150 @@
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
 
-      // Collect properties
       const properties = [];
       document.querySelectorAll('.property-card').forEach(card => {
         properties.push({
-          address: card.querySelector('[data-field="address"]').value.trim(),
-          bedrooms: card.querySelector('[data-field="bedrooms"]').value,
-          bathrooms: card.querySelector('[data-field="bathrooms"]').value,
+          address:     card.querySelector('[data-field="address"]').value.trim(),
+          bedrooms:    card.querySelector('[data-field="bedrooms"]').value,
+          bathrooms:   card.querySelector('[data-field="bathrooms"]').value,
           leaseStatus: card.querySelector('[data-field="leaseStatus"]').value,
-          leaseStart: card.querySelector('[data-field="leaseStart"]').value,
+          leaseStart:  card.querySelector('[data-field="leaseStart"]').value,
           leaseExpiry: card.querySelector('[data-field="leaseExpiry"]').value,
           monthlyRent: card.querySelector('[data-field="monthlyRent"]').value,
-          deposit: card.querySelector('[data-field="deposit"]').value,
+          deposit:     card.querySelector('[data-field="deposit"]').value,
         });
       });
 
-      // Collect pain points
-      const painPoints = [...document.querySelectorAll('#step-4 input[type="checkbox"]:checked')].map(c => c.value);
+      const painPoints    = [...document.querySelectorAll('#step-4 input[type="checkbox"]:checked')].map(c => c.value);
       const propertyTypes = [...document.querySelectorAll('#step-2 input[type="checkbox"]:checked')].map(c => c.value);
 
-      const payload = {
+      lastPayload = {
         segment: 'owner',
         submittedAt: new Date().toISOString(),
         basicInfo: {
           firstName: document.getElementById('firstName').value.trim(),
-          lastName: document.getElementById('lastName').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          phone: document.getElementById('phone').value.trim(),
+          lastName:  document.getElementById('lastName').value.trim(),
+          email:     document.getElementById('email').value.trim(),
+          phone:     document.getElementById('phone').value.trim(),
         },
         portfolio: {
-          propertyCount: document.getElementById('propertyCount').value,
+          propertyCount:  document.getElementById('propertyCount').value,
           managementStyle: document.getElementById('managementStyle').value,
           propertyTypes,
         },
         properties,
         painPoints: {
-          challenges: painPoints,
-          currentTools: document.getElementById('currentTools').value,
+          challenges:      painPoints,
+          currentTools:    document.getElementById('currentTools').value,
           additionalNotes: document.getElementById('additionalNotes').value.trim(),
         }
       };
 
+      submittedEmail = lastPayload.basicInfo.email;
+
       try {
-        const res = await fetch('${API}/api/owners', {
+        const res = await fetch(`${API}/api/owners`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(lastPayload)
         });
-        if (!res.ok) throw new Error('Server error');
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Server error');
 
+        // Hide steps and progress, show verify screen
         document.querySelectorAll('.step').forEach(s => s.style.display = 'none');
-        document.querySelector('.progress-wrap').style.display = 'none';
-        document.getElementById('success-view').style.display = 'block';
+        document.getElementById('progress-wrap').style.display = 'none';
+        document.getElementById('verify-sub-text').textContent = `We sent a 6-digit code to ${submittedEmail}. Enter it below to confirm your spot.`;
+        document.getElementById('verify-view').style.display = 'block';
+        initCodeInputs();
 
       } catch (err) {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Reserve My Spot →';
-        alert('Something went wrong. Make sure the server is running (node server.js).');
+        alert(err.message);
+      }
+    }
+
+    // ── CODE INPUTS ──
+    function initCodeInputs() {
+      const inputs = document.querySelectorAll('#code-inputs input');
+      inputs[0].focus();
+      inputs.forEach((input, i) => {
+        input.addEventListener('input', () => {
+          input.value = input.value.replace(/\D/g, '');
+          if (input.value && i < inputs.length - 1) inputs[i + 1].focus();
+        });
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Backspace' && !input.value && i > 0) inputs[i - 1].focus();
+        });
+        input.addEventListener('paste', e => {
+          e.preventDefault();
+          const pasted = e.clipboardData.getData('text').replace(/\D/g, '').substring(0, 6);
+          pasted.split('').forEach((char, j) => { if (inputs[j]) inputs[j].value = char; });
+          inputs[Math.min(pasted.length, inputs.length - 1)].focus();
+        });
+      });
+    }
+
+    function getCode() {
+      return [...document.querySelectorAll('#code-inputs input')].map(i => i.value).join('');
+    }
+
+    // ── VERIFY ──
+    async function verifyCode() {
+      const code = getCode();
+      if (code.length < 6) {
+        document.getElementById('verify-error').textContent = 'Please enter all 6 digits.';
+        document.getElementById('verify-error').classList.add('visible');
+        return;
+      }
+      const btn = document.getElementById('verify-btn');
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+
+      try {
+        const res = await fetch(`${API}/api/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: submittedEmail, code })
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          document.getElementById('verify-error').textContent = json.error || 'Incorrect code. Please try again.';
+          document.getElementById('verify-error').classList.add('visible');
+          btn.disabled = false;
+          btn.textContent = 'Verify & Confirm Spot →';
+          return;
+        }
+        document.getElementById('verify-view').style.display = 'none';
+        document.getElementById('success-view').style.display = 'block';
+
+      } catch (err) {
+        document.getElementById('verify-error').textContent = 'Something went wrong. Please try again.';
+        document.getElementById('verify-error').classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Verify & Confirm Spot →';
+      }
+    }
+
+    // ── RESEND ──
+    async function resendCode() {
+      if (!lastPayload) return;
+      try {
+        await fetch(`${API}/api/owners`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(lastPayload)
+        });
+        document.getElementById('verify-error').classList.remove('visible');
+        document.querySelectorAll('#code-inputs input').forEach(i => i.value = '');
+        document.querySelectorAll('#code-inputs input')[0].focus();
+        alert('A new code has been sent!');
+      } catch (err) {
+        alert('Could not resend. Make sure the server is running.');
       }
     }
   </script>
 
 </body>
-
 </html>

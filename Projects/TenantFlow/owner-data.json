@@ -8,14 +8,36 @@
     "avatarInitials": "RC"
   },
   "portfolio": {
-    "totalProperties": 3,
+    "totalProperties": 4,
     "occupiedUnits": 3,
     "vacantUnits": 0,
-    "totalMonthlyRent": 5450,
-    "totalAnnualRent": 65400,
+    "totalMonthlyRent": 6850,
+    "totalAnnualRent": 82200,
     "totalDepositsHeld": 10900
   },
   "properties": [
+    {
+      "id": "PROP-001",
+      "address": "1525 Cassil Pl",
+      "unit": "105",
+      "city": "Los Angeles",
+      "state": "CA",
+      "type": "Apartment",
+      "bedrooms": 0,
+      "bathrooms": 1,
+      "monthlyRent": 1850,
+      "status": "vacant",
+      "image": "🏢",
+      "tenant": {
+        "name": "NULL",
+        "email": "NULL",
+        "phone": "NULL",
+        "leaseStart": "NULL",
+        "leaseExpiry": "NULL",
+        "lastPayment": "2025-10-01",
+        "paymentStatus": "NULL"
+      }
+    },
     {
       "id": "PROP-001",
       "address": "412 Maple Avenue",
@@ -85,20 +107,62 @@
   ],
   "accounting": {
     "monthlyIncome": [
-      { "month": "Sep", "income": 5450, "expenses": 1200 },
-      { "month": "Oct", "income": 5450, "expenses": 980 },
-      { "month": "Nov", "income": 5450, "expenses": 1450 },
-      { "month": "Dec", "income": 5450, "expenses": 2100 },
-      { "month": "Jan", "income": 3050, "expenses": 890 },
-      { "month": "Feb", "income": 4250, "expenses": 1100 }
+      {
+        "month": "Sep",
+        "income": 5450,
+        "expenses": 1200
+      },
+      {
+        "month": "Oct",
+        "income": 5450,
+        "expenses": 980
+      },
+      {
+        "month": "Nov",
+        "income": 5450,
+        "expenses": 1450
+      },
+      {
+        "month": "Dec",
+        "income": 5450,
+        "expenses": 2100
+      },
+      {
+        "month": "Jan",
+        "income": 3050,
+        "expenses": 890
+      },
+      {
+        "month": "Feb",
+        "income": 4250,
+        "expenses": 1100
+      }
     ],
     "expenseBreakdown": [
-      { "category": "Maintenance & Repairs", "amount": 2340 },
-      { "category": "Property Management", "amount": 1620 },
-      { "category": "Insurance", "amount": 980 },
-      { "category": "Property Tax", "amount": 1800 },
-      { "category": "Utilities", "amount": 560 },
-      { "category": "Miscellaneous", "amount": 420 }
+      {
+        "category": "Maintenance & Repairs",
+        "amount": 2340
+      },
+      {
+        "category": "Property Management",
+        "amount": 1620
+      },
+      {
+        "category": "Insurance",
+        "amount": 980
+      },
+      {
+        "category": "Property Tax",
+        "amount": 1800
+      },
+      {
+        "category": "Utilities",
+        "amount": 560
+      },
+      {
+        "category": "Miscellaneous",
+        "amount": 420
+      }
     ],
     "ytdIncome": 28700,
     "ytdExpenses": 7720,
