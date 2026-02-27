@@ -7,14 +7,16 @@ const Database = require('better-sqlite3');
 const fs       = require('fs');
 const path     = require('path');
 
-const DB_PATH      = path.join(__dirname, 'data', 'tenantflow.db');
-const DATA_DIR     = path.join(__dirname, 'data');
+const DB_PATH   = path.join(__dirname, 'data', 'tenantflow.db');
+const DATA_DIR  = path.join(__dirname, 'data');
 const RENTERS_JSON = path.join(DATA_DIR, 'renters.json');
 const OWNERS_JSON  = path.join(DATA_DIR, 'owners.json');
 
 console.log('\n🗄️  TenantFlow Database Setup\n');
 
 const db = new Database(DB_PATH);
+
+// Enable WAL mode for better performance
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
@@ -38,22 +40,22 @@ db.exec(`
 
   -- Owners table
   CREATE TABLE IF NOT EXISTS owners (
-    id               INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id          TEXT    UNIQUE NOT NULL,
-    first_name       TEXT    NOT NULL,
-    last_name        TEXT    NOT NULL,
-    email            TEXT    UNIQUE NOT NULL,
-    phone            TEXT,
-    property_count   TEXT,
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         TEXT    UNIQUE NOT NULL,
+    first_name      TEXT    NOT NULL,
+    last_name       TEXT    NOT NULL,
+    email           TEXT    UNIQUE NOT NULL,
+    phone           TEXT,
+    property_count  TEXT,
     management_style TEXT,
-    property_types   TEXT,
-    challenges       TEXT,
-    current_tools    TEXT,
+    property_types  TEXT,    -- JSON array stored as string
+    challenges      TEXT,    -- JSON array stored as string
+    current_tools   TEXT,
     additional_notes TEXT,
-    segment          TEXT    DEFAULT 'owner',
-    verified_at      TEXT,
-    submitted_at     TEXT,
-    created_at       TEXT    DEFAULT (datetime('now'))
+    segment         TEXT    DEFAULT 'owner',
+    verified_at     TEXT,
+    submitted_at    TEXT,
+    created_at      TEXT    DEFAULT (datetime('now'))
   );
 
   -- Properties table (linked to owners)
@@ -76,42 +78,21 @@ db.exec(`
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     token       TEXT    UNIQUE NOT NULL,
     email       TEXT    NOT NULL,
-    segment     TEXT    NOT NULL,
+    segment     TEXT    NOT NULL,  -- 'renter' or 'owner'
     expires_at  TEXT    NOT NULL,
     used        INTEGER DEFAULT 0,
     created_at  TEXT    DEFAULT (datetime('now'))
   );
 
-  -- Analytics table
+  -- Analytics table (funnel tracking)
   CREATE TABLE IF NOT EXISTS analytics (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id   TEXT,
-    event        TEXT NOT NULL,
-    segment      TEXT,
-    email        TEXT,
-    metadata     TEXT,
+    session_id   TEXT,       -- anonymous browser session ID
+    event        TEXT NOT NULL,  -- e.g. 'page_land', 'step_1_complete', 'verified'
+    segment      TEXT,       -- 'renter' or 'owner'
+    email        TEXT,       -- populated after step 1
+    metadata     TEXT,       -- JSON string for extra data
     created_at   TEXT DEFAULT (datetime('now'))
-  );
-
-  -- Invite codes table (owner generates, renter uses to connect)
-  CREATE TABLE IF NOT EXISTS invite_codes (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    code        TEXT    UNIQUE NOT NULL,
-    owner_id    INTEGER NOT NULL REFERENCES owners(id),
-    property_id INTEGER NOT NULL REFERENCES properties(id),
-    used        INTEGER DEFAULT 0,
-    expires_at  TEXT    NOT NULL,
-    created_at  TEXT    DEFAULT (datetime('now'))
-  );
-
-  -- Tenant-property connections
-  CREATE TABLE IF NOT EXISTS tenant_properties (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    renter_id   INTEGER NOT NULL REFERENCES renters(id),
-    property_id INTEGER NOT NULL REFERENCES properties(id),
-    owner_id    INTEGER NOT NULL REFERENCES owners(id),
-    connected_at TEXT   DEFAULT (datetime('now')),
-    UNIQUE(renter_id, property_id)
   );
 `);
 
@@ -123,27 +104,40 @@ function migrateRenters() {
     console.log('⚠️  renters.json not found — skipping renter migration');
     return;
   }
+
   const renters = JSON.parse(fs.readFileSync(RENTERS_JSON, 'utf8'));
-  if (renters.length === 0) { console.log('ℹ️  renters.json is empty — nothing to migrate'); return; }
+  if (renters.length === 0) {
+    console.log('ℹ️  renters.json is empty — nothing to migrate');
+    return;
+  }
 
   const insert = db.prepare(`
     INSERT OR IGNORE INTO renters
       (user_id, first_name, last_name, email, phone, segment, verified_at, submitted_at)
-    VALUES (@userId, @firstName, @lastName, @email, @phone, @segment, @verifiedAt, @submittedAt)
+    VALUES
+      (@userId, @firstName, @lastName, @email, @phone, @segment, @verifiedAt, @submittedAt)
   `);
-  const migrate = db.transaction(renters => {
+
+  const migrate = db.transaction((renters) => {
     let count = 0;
     for (const r of renters) {
       insert.run({
-        userId: r.userId || 'renter-MIGRATED', firstName: r.firstName || '',
-        lastName: r.lastName || '', email: r.email || '', phone: r.phone || '',
-        segment: r.segment || 'renter', verifiedAt: r.verifiedAt || null, submittedAt: r.submittedAt || null,
+        userId:      r.userId      || `renter-MIGRATED`,
+        firstName:   r.firstName   || '',
+        lastName:    r.lastName    || '',
+        email:       r.email       || '',
+        phone:       r.phone       || '',
+        segment:     r.segment     || 'renter',
+        verifiedAt:  r.verifiedAt  || null,
+        submittedAt: r.submittedAt || null,
       });
       count++;
     }
     return count;
   });
-  console.log(`✅ Migrated ${migrate(renters)} renter(s) from renters.json`);
+
+  const count = migrate(renters);
+  console.log(`✅ Migrated ${count} renter(s) from renters.json`);
 }
 
 function migrateOwners() {
@@ -151,8 +145,12 @@ function migrateOwners() {
     console.log('⚠️  owners.json not found — skipping owner migration');
     return;
   }
+
   const owners = JSON.parse(fs.readFileSync(OWNERS_JSON, 'utf8'));
-  if (owners.length === 0) { console.log('ℹ️  owners.json is empty — nothing to migrate'); return; }
+  if (owners.length === 0) {
+    console.log('ℹ️  owners.json is empty — nothing to migrate');
+    return;
+  }
 
   const insertOwner = db.prepare(`
     INSERT OR IGNORE INTO owners
@@ -160,39 +158,59 @@ function migrateOwners() {
        property_count, management_style, property_types,
        challenges, current_tools, additional_notes,
        segment, verified_at, submitted_at)
-    VALUES (@userId, @firstName, @lastName, @email, @phone,
+    VALUES
+      (@userId, @firstName, @lastName, @email, @phone,
        @propertyCount, @managementStyle, @propertyTypes,
        @challenges, @currentTools, @additionalNotes,
        @segment, @verifiedAt, @submittedAt)
   `);
+
   const insertProperty = db.prepare(`
     INSERT INTO properties
       (owner_id, address, bedrooms, bathrooms, lease_status,
        lease_start, lease_expiry, monthly_rent, deposit)
-    VALUES (@ownerId, @address, @bedrooms, @bathrooms, @leaseStatus,
+    VALUES
+      (@ownerId, @address, @bedrooms, @bathrooms, @leaseStatus,
        @leaseStart, @leaseExpiry, @monthlyRent, @deposit)
   `);
-  const migrate = db.transaction(owners => {
+
+  const migrate = db.transaction((owners) => {
     let ownerCount = 0, propCount = 0;
     for (const o of owners) {
-      const info = o.basicInfo || {}, port = o.portfolio || {}, pains = o.painPoints || {};
+      const info   = o.basicInfo   || {};
+      const port   = o.portfolio   || {};
+      const pains  = o.painPoints  || {};
+
       const result = insertOwner.run({
-        userId: o.userId || 'owner-MIGRATED',
-        firstName: info.firstName || '', lastName: info.lastName || '',
-        email: info.email || '', phone: info.phone || '',
-        propertyCount: port.propertyCount || null, managementStyle: port.managementStyle || null,
-        propertyTypes: JSON.stringify(port.propertyTypes || []),
-        challenges: JSON.stringify(pains.challenges || []),
-        currentTools: pains.currentTools || null, additionalNotes: pains.additionalNotes || null,
-        segment: o.segment || 'owner', verifiedAt: o.verifiedAt || null, submittedAt: o.submittedAt || null,
+        userId:          o.userId          || `owner-MIGRATED`,
+        firstName:       info.firstName    || '',
+        lastName:        info.lastName     || '',
+        email:           info.email        || '',
+        phone:           info.phone        || '',
+        propertyCount:   port.propertyCount    || null,
+        managementStyle: port.managementStyle  || null,
+        propertyTypes:   JSON.stringify(port.propertyTypes || []),
+        challenges:      JSON.stringify(pains.challenges   || []),
+        currentTools:    pains.currentTools    || null,
+        additionalNotes: pains.additionalNotes || null,
+        segment:         o.segment         || 'owner',
+        verifiedAt:      o.verifiedAt      || null,
+        submittedAt:     o.submittedAt     || null,
       });
+
+      // Migrate properties linked to this owner
       const ownerId = result.lastInsertRowid;
       for (const p of (o.properties || [])) {
         insertProperty.run({
-          ownerId, address: p.address || '', bedrooms: p.bedrooms || null,
-          bathrooms: p.bathrooms || null, leaseStatus: p.leaseStatus || null,
-          leaseStart: p.leaseStart || null, leaseExpiry: p.leaseExpiry || null,
-          monthlyRent: parseFloat(p.monthlyRent) || null, deposit: parseFloat(p.deposit) || null,
+          ownerId,
+          address:     p.address     || '',
+          bedrooms:    p.bedrooms    || null,
+          bathrooms:   p.bathrooms   || null,
+          leaseStatus: p.leaseStatus || null,
+          leaseStart:  p.leaseStart  || null,
+          leaseExpiry: p.leaseExpiry || null,
+          monthlyRent: parseFloat(p.monthlyRent) || null,
+          deposit:     parseFloat(p.deposit)     || null,
         });
         propCount++;
       }
@@ -200,6 +218,7 @@ function migrateOwners() {
     }
     return { ownerCount, propCount };
   });
+
   const { ownerCount, propCount } = migrate(owners);
   console.log(`✅ Migrated ${ownerCount} owner(s) and ${propCount} propert(ies) from owners.json`);
 }
@@ -208,9 +227,9 @@ migrateRenters();
 migrateOwners();
 
 // ── SUMMARY ──
-const renterCount = db.prepare('SELECT COUNT(*) as count FROM renters').get();
-const ownerCount  = db.prepare('SELECT COUNT(*) as count FROM owners').get();
-const propCount   = db.prepare('SELECT COUNT(*) as count FROM properties').get();
+const renterCount  = db.prepare('SELECT COUNT(*) as count FROM renters').get();
+const ownerCount   = db.prepare('SELECT COUNT(*) as count FROM owners').get();
+const propCount    = db.prepare('SELECT COUNT(*) as count FROM properties').get();
 
 console.log('\n📊 Database summary:');
 console.log(`   Renters:    ${renterCount.count}`);

@@ -1,546 +1,607 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TenantFlow — Owner Dashboard</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="Styles/owner-portal.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles/owner-portal.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    /* ── MODAL ── */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; align-items:center; justify-content:center; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:20px; padding:2rem; width:90%; max-width:520px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+    .modal-title { font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:700; color:var(--slate); margin-bottom:0.4rem; }
+    .modal-sub { font-size:0.82rem; color:var(--muted); margin-bottom:1.5rem; }
+    .modal-close { float:right; background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--muted); margin-top:-0.25rem; }
+    .modal-actions { display:flex; gap:0.75rem; margin-top:1.5rem; justify-content:flex-end; }
+    .btn-primary { padding:0.7rem 1.5rem; background:var(--slate); color:#fff; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:500; cursor:pointer; transition:background 0.2s; }
+    .btn-primary:hover { background:var(--slate-lt); }
+    .btn-primary:disabled { opacity:0.6; cursor:not-allowed; }
+    .btn-secondary { padding:0.7rem 1.5rem; background:var(--sand); color:var(--slate); border:1px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.88rem; cursor:pointer; }
+    .btn-danger { padding:0.5rem 1rem; background:var(--red-bg); color:var(--red); border:1px solid rgba(192,57,43,0.2); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.78rem; cursor:pointer; }
+    .form-group-modal { margin-bottom:1rem; }
+    .form-group-modal label { display:block; font-size:0.78rem; font-weight:500; color:var(--slate); margin-bottom:0.35rem; }
+    .form-group-modal input, .form-group-modal select { width:100%; padding:0.6rem 0.85rem; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.88rem; background:var(--cream); outline:none; }
+    .form-group-modal input:focus, .form-group-modal select:focus { border-color:var(--clay); }
+    .form-row-modal { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+    /* ── INVITE CODE DISPLAY ── */
+    .invite-code-box { background:var(--slate); border-radius:12px; padding:1.25rem; text-align:center; margin:1rem 0; }
+    .invite-code-label { font-size:0.68rem; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.5); margin-bottom:0.5rem; }
+    .invite-code-value { font-size:2rem; font-weight:700; letter-spacing:8px; color:#fff; font-family:'DM Sans',sans-serif; }
+    .invite-code-expiry { font-size:0.72rem; color:rgba(255,255,255,0.4); margin-top:0.5rem; }
+    .copy-btn { margin-top:0.75rem; padding:0.4rem 1rem; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; font-size:0.78rem; cursor:pointer; font-family:'DM Sans',sans-serif; }
+    .copy-btn:hover { background:rgba(255,255,255,0.2); }
+    /* ── PROPERTY CARD ACTIONS ── */
+    .property-card-actions { display:flex; gap:0.5rem; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border); flex-wrap:wrap; }
+    .btn-invite { padding:0.5rem 0.9rem; background:rgba(44,62,53,0.06); color:var(--slate); border:1px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.78rem; cursor:pointer; transition:all 0.2s; }
+    .btn-invite:hover { background:var(--slate); color:#fff; }
+    .tenant-connected { display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; color:var(--green); font-weight:500; padding:0.4rem 0.75rem; background:var(--green-bg); border-radius:8px; }
+  </style>
 </head>
-
 <body>
 
-  <!-- ── SIDEBAR ── -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-text">Tenant<span>Flow</span></div>
-      <div class="portal-label">Owner Dashboard</div>
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">Tenant<span>Flow</span></div>
+    <div class="portal-label">Owner Dashboard</div>
+  </div>
+  <div class="sidebar-owner">
+    <div class="avatar" id="sidebar-avatar">RC</div>
+    <div>
+      <div class="owner-name" id="sidebar-name">Loading...</div>
+      <div class="owner-sub" id="sidebar-sub">— Properties</div>
     </div>
-    <div class="sidebar-owner">
-      <div class="avatar" id="sidebar-avatar">RC</div>
-      <div>
-        <div class="owner-name" id="sidebar-name">Robert Chen</div>
-        <div class="owner-sub" id="sidebar-sub">3 Properties</div>
-      </div>
-    </div>
-    <div style="flex:1;">
-      <div class="nav-section-label" style="margin-top:0.5rem;">Main</div>
-      <button class="nav-item active" onclick="showView('overview', this)"><span class="nav-icon">📊</span>
-        Overview</button>
-      <button class="nav-item" onclick="showView('rentroll', this)"><span class="nav-icon">💳</span> Rent Roll</button>
-      <button class="nav-item" onclick="showView('accounting', this)"><span class="nav-icon">📈</span>
-        Accounting</button>
-      <button class="nav-item" onclick="showView('maintenance', this)">
-        <span class="nav-icon">🔧</span> Maintenance
-        <span class="nav-badge" id="maint-badge">2</span>
-      </button>
-      <button class="nav-item" onclick="showView('properties', this)"><span class="nav-icon">🏠</span>
-        Properties</button>
-      <button class="nav-item" onclick="showView('tenants', this)"><span class="nav-icon">👥</span> Tenants</button>
-      <div class="nav-section-label" style="margin-top:1.5rem;">Account</div>
-      <button class="nav-item" onclick="showView('profile', this)"><span class="nav-icon">👤</span> My Profile</button>
-    </div>
-    <div class="sidebar-footer">
-      <button class="nav-item" onclick="window.location.href='index.html'"><span class="nav-icon">←</span> Back to
-        Home</button>
-    </div>
-  </aside>
+  </div>
+  <div style="flex:1;">
+    <div class="nav-section-label" style="margin-top:0.5rem;">Main</div>
+    <button class="nav-item active" onclick="showView('overview', this)"><span class="nav-icon">📊</span> Overview</button>
+    <button class="nav-item" onclick="showView('rentroll', this)"><span class="nav-icon">💳</span> Rent Roll</button>
+    <button class="nav-item" onclick="showView('accounting', this)"><span class="nav-icon">📈</span> Accounting</button>
+    <button class="nav-item" onclick="showView('maintenance', this)">
+      <span class="nav-icon">🔧</span> Maintenance
+      <span class="nav-badge" id="maint-badge" style="display:none;">0</span>
+    </button>
+    <button class="nav-item" onclick="showView('properties', this)"><span class="nav-icon">🏠</span> Properties</button>
+    <button class="nav-item" onclick="showView('tenants', this)"><span class="nav-icon">👥</span> Tenants</button>
+    <div class="nav-section-label" style="margin-top:1.5rem;">Account</div>
+    <button class="nav-item" onclick="showView('profile', this)"><span class="nav-icon">👤</span> My Profile</button>
+  </div>
+  <div class="sidebar-footer">
+    <button class="nav-item" onclick="window.location.href='index.html'"><span class="nav-icon">←</span> Back to Home</button>
+  </div>
+</aside>
 
-  <!-- ── MAIN ── -->
-  <div class="main-content">
-    <div class="topbar">
-      <div class="topbar-title" id="topbar-title">Overview</div>
-      <div class="topbar-right">
-        <div class="topbar-date" id="topbar-date"></div>
-      </div>
-    </div>
-
-    <div class="content-area">
-
-      <!-- ══ OVERVIEW ══ -->
-      <div class="view active" id="view-overview">
-        <div class="kpi-grid" id="kpi-grid"></div>
-        <div class="charts-grid">
-          <div class="chart-card">
-            <div class="chart-title">Revenue vs Expenses <span
-                style="font-size:0.75rem;font-weight:400;color:var(--muted);">Last 6 months</span></div>
-            <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Occupancy</div>
-            <div class="chart-wrap"><canvas id="occupancyChart"></canvas></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Open Maintenance Requests <button
-              onclick="showView('maintenance', document.querySelector('[onclick*=maintenance]'))"
-              style="font-size:0.78rem;font-weight:400;color:var(--clay);background:none;border:none;cursor:pointer;">View
-              All →</button></div>
-          <div id="overview-maintenance"></div>
-        </div>
-      </div>
-
-      <!-- ══ RENT ROLL ══ -->
-      <div class="view" id="view-rentroll">
-        <div class="card">
-          <div class="card-title">
-            Rent Roll — February 2026
-            <span id="rentroll-summary"></span>
-          </div>
-          <table class="data-table" id="rentroll-table">
-            <thead>
-              <tr>
-                <th>Tenant</th>
-                <th>Property</th>
-                <th>Monthly Rent</th>
-                <th>Last Payment</th>
-                <th>Lease Expiry</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="rentroll-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ══ ACCOUNTING ══ -->
-      <div class="view" id="view-accounting">
-        <div class="accounting-grid">
-          <div>
-            <div class="card">
-              <div class="card-title">Income vs Expenses <span
-                  style="font-size:0.75rem;font-weight:400;color:var(--muted);">Last 6 months</span></div>
-              <div class="chart-wrap"><canvas id="accountingChart"></canvas></div>
-            </div>
-            <div class="card">
-              <div class="card-title">Expense Breakdown</div>
-              <div class="chart-wrap" style="height:260px;"><canvas id="expenseChart"></canvas></div>
-            </div>
-          </div>
-          <div>
-            <div class="card">
-              <div class="card-title">Year to Date</div>
-              <div class="ytd-stats" id="ytd-stats"></div>
-            </div>
-            <div class="card" style="margin-top:1.5rem;">
-              <div class="card-title">Monthly Breakdown</div>
-              <table class="data-table" id="monthly-table">
-                <thead>
-                  <tr>
-                    <th>Month</th>
-                    <th>Income</th>
-                    <th>Expenses</th>
-                    <th>Net</th>
-                  </tr>
-                </thead>
-                <tbody id="monthly-body"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ MAINTENANCE ══ -->
-      <div class="view" id="view-maintenance">
-        <div class="filter-row" id="maint-filters">
-          <button class="filter-btn active" onclick="filterMaintenance('all', this)">All</button>
-          <button class="filter-btn" onclick="filterMaintenance('open', this)">Open</button>
-          <button class="filter-btn" onclick="filterMaintenance('in_progress', this)">In Progress</button>
-          <button class="filter-btn" onclick="filterMaintenance('resolved', this)">Resolved</button>
-        </div>
-        <div id="all-maintenance"></div>
-      </div>
-
-      <!-- ══ PROPERTIES ══ -->
-      <div class="view" id="view-properties">
-        <div class="property-grid" id="property-grid"></div>
-      </div>
-
-      <!-- ══ TENANTS ══ -->
-      <div class="view" id="view-tenants">
-        <div class="tenant-grid" id="tenant-grid"></div>
-      </div>
-
-      <!-- ══ PROFILE ══ -->
-      <div class="view" id="view-profile">
-        <div class="card">
-          <div class="card-title">My Profile</div>
-          <div id="profile-content"></div>
-        </div>
-      </div>
-
+<!-- ── MAIN ── -->
+<div class="main-content">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Overview</div>
+    <div class="topbar-right">
+      <div class="topbar-date" id="topbar-date"></div>
     </div>
   </div>
 
-  <script>
-    let ownerData = {};
-    let allMaintenanceRequests = [];
-    let revenueChartInstance, occupancyChartInstance, accountingChartInstance, expenseChartInstance;
+  <div class="content-area">
 
-    // ── LOAD DATA ──
-    const API = `http://localhost:${location.port || 3000}`;
+    <!-- ══ OVERVIEW ══ -->
+    <div class="view active" id="view-overview">
+      <div class="kpi-grid" id="kpi-grid"></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Revenue vs Expenses <span style="font-size:0.75rem;font-weight:400;color:var(--muted);">Last 6 months</span></div>
+          <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Occupancy</div>
+          <div class="chart-wrap"><canvas id="occupancyChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Open Maintenance Requests <button onclick="showView('maintenance', document.querySelector('[onclick*=maintenance]'))" style="font-size:0.78rem;font-weight:400;color:var(--clay);background:none;border:none;cursor:pointer;">View All →</button></div>
+        <div id="overview-maintenance"></div>
+      </div>
+    </div>
 
-    async function loadData() {
-      const params = new URLSearchParams(window.location.search);
-      const auth = params.get('auth');
-      const error = params.get('error');
+    <!-- ══ RENT ROLL ══ -->
+    <div class="view" id="view-rentroll">
+      <div class="card">
+        <div class="card-title">Rent Roll — <span id="rentroll-month"></span><span id="rentroll-summary"></span></div>
+        <table class="data-table">
+          <thead><tr><th>Tenant</th><th>Property</th><th>Monthly Rent</th><th>Lease Expiry</th><th>Status</th></tr></thead>
+          <tbody id="rentroll-body"></tbody>
+        </table>
+      </div>
+    </div>
 
-      if (error === 'invalid_token') {
-        alert('This sign-in link is invalid. Please request a new one.');
-        window.location.href = 'owner.html';
-        return;
-      }
-      if (error === 'expired_token') {
-        alert('This sign-in link has expired. Please request a new one.');
-        window.location.href = 'owner.html';
-        return;
-      }
+    <!-- ══ ACCOUNTING ══ -->
+    <div class="view" id="view-accounting">
+      <div class="accounting-grid">
+        <div>
+          <div class="card">
+            <div class="card-title">Income vs Expenses <span style="font-size:0.75rem;font-weight:400;color:var(--muted);">Last 6 months</span></div>
+            <div class="chart-wrap"><canvas id="accountingChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Expense Breakdown</div>
+            <div class="chart-wrap" style="height:260px;"><canvas id="expenseChart"></canvas></div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">Year to Date</div>
+            <div class="ytd-stats" id="ytd-stats"></div>
+          </div>
+          <div class="card" style="margin-top:1.5rem;">
+            <div class="card-title">Monthly Breakdown</div>
+            <table class="data-table"><thead><tr><th>Month</th><th>Income</th><th>Expenses</th><th>Net</th></tr></thead><tbody id="monthly-body"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      window.history.replaceState({}, '', 'owner-portal.html');
+    <!-- ══ MAINTENANCE ══ -->
+    <div class="view" id="view-maintenance">
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterMaintenance('all', this)">All</button>
+        <button class="filter-btn" onclick="filterMaintenance('open', this)">Open</button>
+        <button class="filter-btn" onclick="filterMaintenance('in_progress', this)">In Progress</button>
+        <button class="filter-btn" onclick="filterMaintenance('resolved', this)">Resolved</button>
+      </div>
+      <div id="all-maintenance"></div>
+    </div>
 
-      if (auth) {
-        try {
-          const res = await fetch(`${API}/api/owner-data?email=${encodeURIComponent(auth)}`);
-          if (!res.ok) throw new Error('Could not load your data.');
-          ownerData = await res.json();
+    <!-- ══ PROPERTIES ══ -->
+    <div class="view" id="view-properties">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:1.25rem;">
+        <button class="btn-primary" onclick="openAddPropertyModal()">+ Add Property</button>
+      </div>
+      <div class="property-grid" id="property-grid"></div>
+    </div>
 
-          // Accounting uses placeholder data until Sprint 6
-          ownerData.accounting = {
-            monthlyIncome: [
-              { month: 'Sep', income: ownerData.portfolio.totalMonthlyRent, expenses: 1200 },
-              { month: 'Oct', income: ownerData.portfolio.totalMonthlyRent, expenses: 980 },
-              { month: 'Nov', income: ownerData.portfolio.totalMonthlyRent, expenses: 1450 },
-              { month: 'Dec', income: ownerData.portfolio.totalMonthlyRent, expenses: 2100 },
-              { month: 'Jan', income: ownerData.portfolio.totalMonthlyRent, expenses: 890 },
-              { month: 'Feb', income: ownerData.portfolio.totalMonthlyRent, expenses: 1100 },
-            ],
-            expenseBreakdown: [
-              { category: 'Maintenance & Repairs', amount: 2340 },
-              { category: 'Property Management', amount: 1620 },
-              { category: 'Insurance', amount: 980 },
-              { category: 'Property Tax', amount: 1800 },
-              { category: 'Utilities', amount: 560 },
-              { category: 'Miscellaneous', amount: 420 },
-            ],
-            ytdIncome: ownerData.portfolio.totalMonthlyRent * 2,
-            ytdExpenses: 7720,
-            ytdNet: (ownerData.portfolio.totalMonthlyRent * 2) - 7720,
-          };
+    <!-- ══ TENANTS ══ -->
+    <div class="view" id="view-tenants">
+      <div class="tenant-grid" id="tenant-grid"></div>
+    </div>
 
-          allMaintenanceRequests = ownerData.maintenanceRequests || [];
-          renderAll();
-        } catch (e) {
-          alert(e.message);
-          window.location.href = 'owner.html';
-        }
-      } else {
-        // No auth — fall back to demo data for preview
-        try {
-          const res = await fetch('owner-data.json');
-          ownerData = await res.json();
-          allMaintenanceRequests = ownerData.maintenanceRequests;
-          renderAll();
-        } catch (e) { console.error('Could not load owner-data.json', e); }
-      }
+    <!-- ══ PROFILE ══ -->
+    <div class="view" id="view-profile">
+      <div class="card">
+        <div class="card-title">My Profile</div>
+        <div id="profile-content"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ ADD PROPERTY MODAL ══ -->
+<div class="modal-overlay" id="modal-add-property">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-add-property')">✕</button>
+    <div class="modal-title">Add a Property</div>
+    <div class="modal-sub">Fill in the details for your new property.</div>
+    <div class="form-group-modal">
+      <label>Street Address *</label>
+      <input type="text" id="ap-address" placeholder="123 Main St, Austin, TX 78701"/>
+    </div>
+    <div class="form-row-modal">
+      <div class="form-group-modal">
+        <label>Bedrooms</label>
+        <select id="ap-bedrooms">
+          <option value="">Select</option>
+          <option>Studio</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option>
+        </select>
+      </div>
+      <div class="form-group-modal">
+        <label>Bathrooms</label>
+        <select id="ap-bathrooms">
+          <option value="">Select</option>
+          <option>1</option><option>1.5</option><option>2</option><option>2.5</option><option>3</option><option>3+</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group-modal">
+      <label>Lease Status</label>
+      <select id="ap-lease-status">
+        <option value="">Select...</option>
+        <option value="active">Active — tenant currently living here</option>
+        <option value="expiring">Expiring soon</option>
+        <option value="vacant">Vacant — no current tenant</option>
+      </select>
+    </div>
+    <div class="form-row-modal">
+      <div class="form-group-modal">
+        <label>Lease Start</label>
+        <input type="date" id="ap-lease-start"/>
+      </div>
+      <div class="form-group-modal">
+        <label>Lease Expiry</label>
+        <input type="date" id="ap-lease-expiry"/>
+      </div>
+    </div>
+    <div class="form-row-modal">
+      <div class="form-group-modal">
+        <label>Monthly Rent ($)</label>
+        <input type="number" id="ap-rent" placeholder="1800" min="0"/>
+      </div>
+      <div class="form-group-modal">
+        <label>Security Deposit ($)</label>
+        <input type="number" id="ap-deposit" placeholder="3600" min="0"/>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-add-property')">Cancel</button>
+      <button class="btn-primary" id="add-prop-btn" onclick="submitAddProperty()">Add Property</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INVITE CODE MODAL ══ -->
+<div class="modal-overlay" id="modal-invite">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-invite')">✕</button>
+    <div class="modal-title">Invite Tenant</div>
+    <div class="modal-sub" id="invite-modal-sub">Share this code with your tenant to connect them to this property.</div>
+    <div id="invite-code-area">
+      <div class="invite-code-box">
+        <div class="invite-code-label">Invite Code</div>
+        <div class="invite-code-value" id="invite-code-display">------</div>
+        <div class="invite-code-expiry" id="invite-code-expiry">Expires in 24 hours</div>
+        <button class="copy-btn" onclick="copyInviteCode()">Copy Code</button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--muted);text-align:center;line-height:1.6;">
+        Your tenant can enter this code during signup or from their portal to connect to this property.
+        Each code is single-use and expires in 24 hours.
+      </p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-invite')">Done</button>
+      <button class="btn-primary" onclick="regenerateInviteCode()">Generate New Code</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REMOVE PROPERTY MODAL ══ -->
+<div class="modal-overlay" id="modal-remove-property">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-remove-property')">✕</button>
+    <div class="modal-title">Remove Property</div>
+    <div class="modal-sub" id="remove-modal-sub">Are you sure you want to remove this property? This will also disconnect any linked tenants.</div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-remove-property')">Cancel</button>
+      <button class="btn-primary" id="confirm-remove-btn" style="background:var(--red);" onclick="confirmRemoveProperty()">Remove Property</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = `http://localhost:${location.port || 3000}`;
+  let ownerData = {};
+  let allMaintenanceRequests = [];
+  let currentOwnerEmail = null;
+  let activeInvitePropertyId = null;
+  let removePropertyId = null;
+  let revenueChartInstance, occupancyChartInstance, accountingChartInstance, expenseChartInstance;
+
+  // ── LOAD DATA ──
+  async function loadData() {
+    const params = new URLSearchParams(window.location.search);
+    const auth   = params.get('auth');
+    const error  = params.get('error');
+
+    if (error === 'invalid_token') { alert('This sign-in link is invalid. Please request a new one.'); window.location.href = 'owner.html'; return; }
+    if (error === 'expired_token') { alert('This sign-in link has expired. Please request a new one.'); window.location.href = 'owner.html'; return; }
+
+    window.history.replaceState({}, '', 'owner-portal.html');
+
+    if (auth) {
+      currentOwnerEmail = decodeURIComponent(auth);
+      try {
+        const res = await fetch(`${API}/api/owner-data?email=${encodeURIComponent(currentOwnerEmail)}`);
+        if (!res.ok) throw new Error('Could not load your data.');
+        ownerData = await res.json();
+        ownerData.accounting = buildAccountingPlaceholder(ownerData.portfolio.totalMonthlyRent);
+        allMaintenanceRequests = ownerData.maintenanceRequests || [];
+        renderAll();
+      } catch (e) { alert(e.message); window.location.href = 'owner.html'; }
+    } else {
+      // Demo mode — load from json
+      try {
+        const res = await fetch('owner-data.json');
+        ownerData = await res.json();
+        allMaintenanceRequests = ownerData.maintenanceRequests || [];
+        renderAll();
+      } catch(e) { console.error('Could not load owner-data.json', e); }
     }
+  }
 
-    // ── VIEW SWITCHER ──
-    function showView(viewId, btn) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.getElementById(`view-${viewId}`).classList.add('active');
-      if (btn) btn.classList.add('active');
-      const titles = { overview: 'Overview', rentroll: 'Rent Roll', accounting: 'Accounting', maintenance: 'Maintenance', properties: 'Properties', tenants: 'Tenants', profile: 'My Profile' };
-      document.getElementById('topbar-title').textContent = titles[viewId] || viewId;
-      // Re-render charts when switching to their views
-      if (viewId === 'accounting') renderAccountingCharts();
-    }
+  function buildAccountingPlaceholder(monthlyRent) {
+    return {
+      monthlyIncome: [
+        { month: 'Sep', income: monthlyRent, expenses: 1200 },
+        { month: 'Oct', income: monthlyRent, expenses: 980  },
+        { month: 'Nov', income: monthlyRent, expenses: 1450 },
+        { month: 'Dec', income: monthlyRent, expenses: 2100 },
+        { month: 'Jan', income: monthlyRent, expenses: 890  },
+        { month: 'Feb', income: monthlyRent, expenses: 1100 },
+      ],
+      expenseBreakdown: [
+        { category: 'Maintenance & Repairs', amount: 2340 },
+        { category: 'Property Management',   amount: 1620 },
+        { category: 'Insurance',             amount: 980  },
+        { category: 'Property Tax',          amount: 1800 },
+        { category: 'Utilities',             amount: 560  },
+        { category: 'Miscellaneous',         amount: 420  },
+      ],
+      ytdIncome:   monthlyRent * 2,
+      ytdExpenses: 7720,
+      ytdNet:      (monthlyRent * 2) - 7720,
+    };
+  }
 
-    // ── HELPERS ──
-    function formatDate(d) { return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
-    function formatCurrency(n) { return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0 }); }
-    function initials(name) { return name.split(' ').map(n => n[0]).join('').toUpperCase(); }
-    function statusBadge(status) {
-      const map = { paid: ['badge-green', 'Paid'], overdue: ['badge-red', 'Overdue'], open: ['badge-blue', 'Open'], in_progress: ['badge-clay', 'In Progress'], resolved: ['badge-green', 'Resolved'], occupied: ['badge-green', 'Occupied'], vacant: ['badge-muted', 'Vacant'] };
-      const [cls, label] = map[status] || ['badge-muted', status];
-      return `<span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>`;
-    }
-    function priorityBadge(p) {
-      const map = { high: 'badge-red', medium: 'badge-clay', low: 'badge-muted' };
-      return `<span class="badge ${map[p] || 'badge-muted'}">${p}</span>`;
-    }
+  // ── VIEW SWITCHER ──
+  function showView(viewId, btn) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`view-${viewId}`).classList.add('active');
+    if (btn) btn.classList.add('active');
+    const titles = { overview:'Overview', rentroll:'Rent Roll', accounting:'Accounting', maintenance:'Maintenance', properties:'Properties', tenants:'Tenants', profile:'My Profile' };
+    document.getElementById('topbar-title').textContent = titles[viewId] || viewId;
+    if (viewId === 'accounting') renderAccountingCharts();
+  }
 
-    // ── RENDER ALL ──
-    function renderAll() {
-      const { owner, portfolio, properties, accounting, maintenanceRequests } = ownerData;
+  // ── HELPERS ──
+  function formatDate(d) {
+    if (!d) return '—';
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  }
+  function formatCurrency(n) { return '$' + Number(n||0).toLocaleString('en-US', { minimumFractionDigits:0 }); }
+  function initials(name) { return (name||'?').split(' ').map(n => n[0]).join('').toUpperCase(); }
+  function statusBadge(status) {
+    const map = { paid:['badge-green','Paid'], overdue:['badge-red','Overdue'], open:['badge-blue','Open'], in_progress:['badge-clay','In Progress'], resolved:['badge-green','Resolved'], active:['badge-green','Active'], occupied:['badge-green','Occupied'], vacant:['badge-muted','Vacant'], expiring:['badge-clay','Expiring'], unknown:['badge-muted','Unknown'] };
+    const [cls, label] = map[status] || ['badge-muted', status || 'Unknown'];
+    return `<span class="badge ${cls}"><span class="badge-dot"></span>${label}</span>`;
+  }
+  function priorityBadge(p) {
+    const map = { high:'badge-red', medium:'badge-clay', low:'badge-muted' };
+    return `<span class="badge ${map[p]||'badge-muted'}">${p}</span>`;
+  }
 
-      document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-      document.getElementById('sidebar-avatar').textContent = owner.avatarInitials;
-      document.getElementById('sidebar-name').textContent = `${owner.firstName} ${owner.lastName}`;
-      document.getElementById('sidebar-sub').textContent = `${portfolio.totalProperties} Properties`;
+  // ── MODAL HELPERS ──
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-      const openCount = maintenanceRequests.filter(m => m.status !== 'resolved').length;
-      const badge = document.getElementById('maint-badge');
-      badge.textContent = openCount;
-      badge.style.display = openCount > 0 ? 'inline-flex' : 'none';
+  // ── RENDER ALL ──
+  function renderAll() {
+    const { owner, portfolio, properties, accounting, maintenanceRequests } = ownerData;
+    document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+    document.getElementById('sidebar-avatar').textContent = owner.avatarInitials;
+    document.getElementById('sidebar-name').textContent   = `${owner.firstName} ${owner.lastName}`;
+    document.getElementById('sidebar-sub').textContent    = `${portfolio.totalProperties} Propert${portfolio.totalProperties !== 1 ? 'ies' : 'y'}`;
+    document.getElementById('rentroll-month').textContent = new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
-      renderKPIs(portfolio, accounting);
-      renderOverviewCharts(portfolio, accounting);
-      renderOverviewMaintenance(maintenanceRequests);
-      renderRentRoll(properties);
-      renderYTD(accounting);
-      renderMonthlyTable(accounting);
-      renderMaintenance(maintenanceRequests);
-      renderProperties(properties);
-      renderTenants(properties);
-      renderProfile(owner, portfolio);
-    }
+    const openCount = (maintenanceRequests||[]).filter(m => m.status !== 'resolved').length;
+    const badge = document.getElementById('maint-badge');
+    badge.textContent = openCount;
+    badge.style.display = openCount > 0 ? 'inline-flex' : 'none';
 
-    // ── KPIs ──
-    function renderKPIs(portfolio, accounting) {
-      const occupancyPct = Math.round((portfolio.occupiedUnits / (portfolio.occupiedUnits + portfolio.vacantUnits)) * 100);
-      const lastMonth = accounting.monthlyIncome[accounting.monthlyIncome.length - 1];
-      const net = lastMonth.income - lastMonth.expenses;
+    renderKPIs(portfolio, accounting);
+    renderOverviewCharts(portfolio, accounting);
+    renderOverviewMaintenance(maintenanceRequests || []);
+    renderRentRoll(properties);
+    renderYTD(accounting);
+    renderMonthlyTable(accounting);
+    renderMaintenance(maintenanceRequests || []);
+    renderProperties(properties);
+    renderTenants(properties);
+    renderProfile(owner, portfolio);
+  }
 
-      document.getElementById('kpi-grid').innerHTML = `
-      <div class="kpi-card"><div class="kpi-icon">🏠</div><div class="kpi-label">Total Properties</div><div class="kpi-value">${portfolio.totalProperties}</div><div class="kpi-sub"><span class="kpi-trend-up">↑</span> ${portfolio.occupiedUnits} occupied · ${portfolio.vacantUnits} vacant</div></div>
+  // ── KPIs ──
+  function renderKPIs(portfolio, accounting) {
+    const pct = Math.round((portfolio.occupiedUnits / Math.max(portfolio.occupiedUnits + portfolio.vacantUnits, 1)) * 100);
+    const last = accounting.monthlyIncome[accounting.monthlyIncome.length - 1];
+    const net  = last.income - last.expenses;
+    document.getElementById('kpi-grid').innerHTML = `
+      <div class="kpi-card"><div class="kpi-icon">🏠</div><div class="kpi-label">Total Properties</div><div class="kpi-value">${portfolio.totalProperties}</div><div class="kpi-sub">${portfolio.occupiedUnits} occupied · ${portfolio.vacantUnits} vacant</div></div>
       <div class="kpi-card"><div class="kpi-icon">💳</div><div class="kpi-label">Monthly Rent Roll</div><div class="kpi-value">${formatCurrency(portfolio.totalMonthlyRent)}</div><div class="kpi-sub">Annual: ${formatCurrency(portfolio.totalAnnualRent)}</div></div>
-      <div class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-label">Net Last Month</div><div class="kpi-value">${formatCurrency(net)}</div><div class="kpi-sub">Income: ${formatCurrency(lastMonth.income)} · Exp: ${formatCurrency(lastMonth.expenses)}</div></div>
-      <div class="kpi-card"><div class="kpi-icon">🎯</div><div class="kpi-label">Occupancy Rate</div><div class="kpi-value">${occupancyPct}%</div><div class="kpi-sub">YTD Net: ${formatCurrency(accounting.ytdNet)}</div></div>
+      <div class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-label">Net Last Month</div><div class="kpi-value">${formatCurrency(net)}</div><div class="kpi-sub">Income: ${formatCurrency(last.income)} · Exp: ${formatCurrency(last.expenses)}</div></div>
+      <div class="kpi-card"><div class="kpi-icon">🎯</div><div class="kpi-label">Occupancy Rate</div><div class="kpi-value">${pct}%</div><div class="kpi-sub">YTD Net: ${formatCurrency(accounting.ytdNet)}</div></div>
     `;
-    }
+  }
 
-    // ── OVERVIEW CHARTS ──
-    function renderOverviewCharts(portfolio, accounting) {
-      const months = accounting.monthlyIncome.map(m => m.month);
-      const incomes = accounting.monthlyIncome.map(m => m.income);
-      const expenses = accounting.monthlyIncome.map(m => m.expenses);
+  // ── OVERVIEW CHARTS ──
+  function renderOverviewCharts(portfolio, accounting) {
+    const months   = accounting.monthlyIncome.map(m => m.month);
+    const incomes  = accounting.monthlyIncome.map(m => m.income);
+    const expenses = accounting.monthlyIncome.map(m => m.expenses);
 
-      // Revenue chart
-      if (revenueChartInstance) revenueChartInstance.destroy();
-      revenueChartInstance = new Chart(document.getElementById('revenueChart'), {
-        type: 'bar',
-        data: {
-          labels: months,
-          datasets: [
-            { label: 'Income', data: incomes, backgroundColor: 'rgba(44,62,53,0.8)', borderRadius: 6, borderSkipped: false },
-            { label: 'Expenses', data: expenses, backgroundColor: 'rgba(196,137,90,0.7)', borderRadius: 6, borderSkipped: false }
-          ]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { font: { family: 'DM Sans', size: 11 }, boxWidth: 12 } } },
-          scales: {
-            x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 11 } } },
-            y: { grid: { color: 'rgba(44,62,53,0.06)' }, ticks: { font: { family: 'DM Sans', size: 11 }, callback: v => '$' + v.toLocaleString() } }
-          }
-        }
-      });
+    if (revenueChartInstance) revenueChartInstance.destroy();
+    revenueChartInstance = new Chart(document.getElementById('revenueChart'), {
+      type: 'bar',
+      data: { labels: months, datasets: [
+        { label:'Income',   data: incomes,  backgroundColor:'rgba(44,62,53,0.8)',  borderRadius:6, borderSkipped:false },
+        { label:'Expenses', data: expenses, backgroundColor:'rgba(196,137,90,0.7)', borderRadius:6, borderSkipped:false }
+      ]},
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{ position:'bottom', labels:{ font:{ family:'DM Sans', size:11 }, boxWidth:12 } } },
+        scales: { x:{ grid:{ display:false }, ticks:{ font:{ family:'DM Sans', size:11 } } }, y:{ grid:{ color:'rgba(44,62,53,0.06)' }, ticks:{ font:{ family:'DM Sans', size:11 }, callback: v => '$'+v.toLocaleString() } } }
+      }
+    });
 
-      // Occupancy donut
-      if (occupancyChartInstance) occupancyChartInstance.destroy();
-      occupancyChartInstance = new Chart(document.getElementById('occupancyChart'), {
-        type: 'doughnut',
-        data: {
-          labels: ['Occupied', 'Vacant'],
-          datasets: [{ data: [portfolio.occupiedUnits, portfolio.vacantUnits || 0.001], backgroundColor: ['#2C3E35', '#F5F0E8'], borderWidth: 0, hoverOffset: 4 }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false, cutout: '72%',
-          plugins: {
-            legend: { position: 'bottom', labels: { font: { family: 'DM Sans', size: 11 }, boxWidth: 12 } },
-            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} unit${ctx.raw !== 1 ? 's' : ''}` } }
-          }
-        }
-      });
-    }
+    if (occupancyChartInstance) occupancyChartInstance.destroy();
+    occupancyChartInstance = new Chart(document.getElementById('occupancyChart'), {
+      type:'doughnut',
+      data: { labels:['Occupied','Vacant'], datasets:[{ data:[portfolio.occupiedUnits, portfolio.vacantUnits||0.001], backgroundColor:['#2C3E35','#F5F0E8'], borderWidth:0 }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'72%',
+        plugins: { legend:{ position:'bottom', labels:{ font:{ family:'DM Sans', size:11 }, boxWidth:12 } } }
+      }
+    });
+  }
 
-    // ── ACCOUNTING CHARTS (rendered on tab switch) ──
-    function renderAccountingCharts() {
-      const { accounting } = ownerData;
-      const months = accounting.monthlyIncome.map(m => m.month);
-      const incomes = accounting.monthlyIncome.map(m => m.income);
-      const expenses = accounting.monthlyIncome.map(m => m.expenses);
+  // ── ACCOUNTING CHARTS ──
+  function renderAccountingCharts() {
+    const { accounting } = ownerData;
+    const months   = accounting.monthlyIncome.map(m => m.month);
+    const incomes  = accounting.monthlyIncome.map(m => m.income);
+    const expenses = accounting.monthlyIncome.map(m => m.expenses);
 
-      if (accountingChartInstance) accountingChartInstance.destroy();
-      accountingChartInstance = new Chart(document.getElementById('accountingChart'), {
-        type: 'line',
-        data: {
-          labels: months,
-          datasets: [
-            { label: 'Income', data: incomes, borderColor: '#2C3E35', backgroundColor: 'rgba(44,62,53,0.08)', tension: 0.4, fill: true, pointBackgroundColor: '#2C3E35' },
-            { label: 'Expenses', data: expenses, borderColor: '#C4895A', backgroundColor: 'rgba(196,137,90,0.08)', tension: 0.4, fill: true, pointBackgroundColor: '#C4895A' }
-          ]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { font: { family: 'DM Sans', size: 11 }, boxWidth: 12 } } },
-          scales: {
-            x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 11 } } },
-            y: { grid: { color: 'rgba(44,62,53,0.06)' }, ticks: { font: { family: 'DM Sans', size: 11 }, callback: v => '$' + v.toLocaleString() } }
-          }
-        }
-      });
+    if (accountingChartInstance) accountingChartInstance.destroy();
+    accountingChartInstance = new Chart(document.getElementById('accountingChart'), {
+      type:'line',
+      data: { labels:months, datasets:[
+        { label:'Income',   data:incomes,  borderColor:'#2C3E35', backgroundColor:'rgba(44,62,53,0.08)',   tension:0.4, fill:true, pointBackgroundColor:'#2C3E35' },
+        { label:'Expenses', data:expenses, borderColor:'#C4895A', backgroundColor:'rgba(196,137,90,0.08)', tension:0.4, fill:true, pointBackgroundColor:'#C4895A' }
+      ]},
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{ position:'bottom', labels:{ font:{ family:'DM Sans', size:11 }, boxWidth:12 } } },
+        scales: { x:{ grid:{ display:false }, ticks:{ font:{ family:'DM Sans', size:11 } } }, y:{ grid:{ color:'rgba(44,62,53,0.06)' }, ticks:{ font:{ family:'DM Sans', size:11 }, callback: v => '$'+v.toLocaleString() } } }
+      }
+    });
 
-      if (expenseChartInstance) expenseChartInstance.destroy();
-      const expCats = accounting.expenseBreakdown.map(e => e.category);
-      const expAmts = accounting.expenseBreakdown.map(e => e.amount);
-      expenseChartInstance = new Chart(document.getElementById('expenseChart'), {
-        type: 'doughnut',
-        data: {
-          labels: expCats,
-          datasets: [{ data: expAmts, backgroundColor: ['#2C3E35', '#C4895A', '#3D5248', '#A06840', '#7A8C83', '#F5F0E8'], borderWidth: 2, borderColor: '#fff' }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false, cutout: '55%',
-          plugins: { legend: { position: 'right', labels: { font: { family: 'DM Sans', size: 10 }, boxWidth: 10 } } }
-        }
-      });
-    }
+    if (expenseChartInstance) expenseChartInstance.destroy();
+    const cats = accounting.expenseBreakdown.map(e => e.category);
+    const amts = accounting.expenseBreakdown.map(e => e.amount);
+    expenseChartInstance = new Chart(document.getElementById('expenseChart'), {
+      type:'doughnut',
+      data: { labels:cats, datasets:[{ data:amts, backgroundColor:['#2C3E35','#C4895A','#3D5248','#A06840','#7A8C83','#F5F0E8'], borderWidth:2, borderColor:'#fff' }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'55%', plugins:{ legend:{ position:'right', labels:{ font:{ family:'DM Sans', size:10 }, boxWidth:10 } } } }
+    });
+  }
 
-    // ── OVERVIEW MAINTENANCE ──
-    function renderOverviewMaintenance(requests) {
-      const open = requests.filter(r => r.status !== 'resolved').slice(0, 3);
-      document.getElementById('overview-maintenance').innerHTML = open.length === 0
-        ? `<p style="color:var(--muted);font-size:0.88rem;">No open requests 🎉</p>`
-        : open.map(r => maintenanceRow(r)).join('');
-    }
+  // ── OVERVIEW MAINTENANCE ──
+  function renderOverviewMaintenance(requests) {
+    const open = requests.filter(r => r.status !== 'resolved').slice(0,3);
+    document.getElementById('overview-maintenance').innerHTML = open.length === 0
+      ? `<p style="color:var(--muted);font-size:0.88rem;">No open requests 🎉</p>`
+      : open.map(r => maintenanceRow(r)).join('');
+  }
 
-    function maintenanceRow(r) {
-      return `
+  function maintenanceRow(r) {
+    return `
       <div class="maintenance-item">
         <div class="maintenance-left">
           <div class="maintenance-title">${r.title}</div>
-          <div class="maintenance-meta">${r.id} · ${r.property} · ${r.tenant} · ${formatDate(r.submittedDate)}</div>
+          <div class="maintenance-meta">${r.id} · ${r.property} · ${r.tenant}</div>
         </div>
         <div class="maintenance-right">
           ${statusBadge(r.status)}
           ${priorityBadge(r.priority)}
         </div>
-      </div>
-    `;
-    }
+      </div>`;
+  }
 
-    // ── RENT ROLL ──
-    function renderRentRoll(properties) {
-      const paid = properties.filter(p => p.tenant?.paymentStatus === 'paid').length;
-      const overdue = properties.filter(p => p.tenant?.paymentStatus === 'overdue').length;
+  // ── RENT ROLL ──
+  function renderRentRoll(properties) {
+    const connected = properties.filter(p => p.tenant);
+    document.getElementById('rentroll-summary').innerHTML = `
+      <span style="font-size:0.82rem;font-weight:400;color:var(--muted);margin-left:0.5rem;">
+        ${connected.length} tenant${connected.length !== 1 ? 's' : ''} connected
+      </span>`;
+    document.getElementById('rentroll-body').innerHTML = properties.map(p => `
+      <tr>
+        <td>
+          ${p.tenant ? `<strong>${p.tenant.name}</strong><br/><span style="font-size:0.75rem;color:var(--muted);">${p.tenant.email}</span>` : `<span style="color:var(--muted);font-size:0.85rem;">No tenant connected</span>`}
+        </td>
+        <td>${p.address}</td>
+        <td><strong>${formatCurrency(p.monthlyRent)}</strong></td>
+        <td>${formatDate(p.leaseExpiry)}</td>
+        <td>${statusBadge(p.status)}</td>
+      </tr>`).join('');
+  }
 
-      document.getElementById('rentroll-summary').innerHTML = `
-        <span style="font-size:0.82rem;font-weight:400;color:var(--muted);">
-          ${statusBadge('paid')} ${paid} paid &nbsp; ${statusBadge('overdue')} ${overdue} overdue
-        </span>
-      `;
-
-      document.getElementById('rentroll-body').innerHTML = properties.map(p => `
-        <tr>
-          <td><strong>${p.tenant?.name || '—'}</strong><br/>
-            <span style="font-size:0.75rem;color:var(--muted);">${p.tenant?.email || 'No tenant assigned'}</span>
-          </td>
-          <td>${p.address}<br/>
-            <span style="font-size:0.75rem;color:var(--muted);">${p.unit || ''}</span>
-          </td>
-          <td><strong>${formatCurrency(p.monthlyRent || 0)}</strong></td>
-          <td>${p.tenant?.lastPayment ? formatDate(p.tenant.lastPayment) : '—'}</td>
-          <td>${p.leaseExpiry ? formatDate(p.leaseExpiry) : '—'}</td>
-          <td>${p.tenant?.paymentStatus ? statusBadge(p.tenant.paymentStatus) : statusBadge(p.status)}</td>
-        </tr>
-      `).join('');
-    }
-
-    // ── YTD ──
-    function renderYTD(accounting) {
-      document.getElementById('ytd-stats').innerHTML = `
+  // ── YTD ──
+  function renderYTD(accounting) {
+    document.getElementById('ytd-stats').innerHTML = `
       <div class="ytd-item income"><div class="ytd-label income">YTD Income</div><div class="ytd-value income">${formatCurrency(accounting.ytdIncome)}</div></div>
       <div class="ytd-item expense"><div class="ytd-label expense">YTD Expenses</div><div class="ytd-value expense">${formatCurrency(accounting.ytdExpenses)}</div></div>
-      <div class="ytd-item net"><div class="ytd-label net">YTD Net</div><div class="ytd-value net">${formatCurrency(accounting.ytdNet)}</div></div>
-    `;
-    }
+      <div class="ytd-item net"><div class="ytd-label net">YTD Net</div><div class="ytd-value net">${formatCurrency(accounting.ytdNet)}</div></div>`;
+  }
 
-    // ── MONTHLY TABLE ──
-    function renderMonthlyTable(accounting) {
-      document.getElementById('monthly-body').innerHTML = accounting.monthlyIncome.map(m => {
-        const net = m.income - m.expenses;
-        return `
-        <tr>
-          <td>${m.month}</td>
-          <td style="color:var(--green);">${formatCurrency(m.income)}</td>
-          <td style="color:var(--red);">${formatCurrency(m.expenses)}</td>
-          <td><strong style="color:${net >= 0 ? 'var(--green)' : 'var(--red)'};">${formatCurrency(net)}</strong></td>
-        </tr>
-      `;
-      }).join('');
-    }
+  // ── MONTHLY TABLE ──
+  function renderMonthlyTable(accounting) {
+    document.getElementById('monthly-body').innerHTML = accounting.monthlyIncome.map(m => {
+      const net = m.income - m.expenses;
+      return `<tr>
+        <td>${m.month}</td>
+        <td style="color:var(--green);">${formatCurrency(m.income)}</td>
+        <td style="color:var(--red);">${formatCurrency(m.expenses)}</td>
+        <td><strong style="color:${net>=0?'var(--green)':'var(--red)'};">${formatCurrency(net)}</strong></td>
+      </tr>`;
+    }).join('');
+  }
 
-    // ── MAINTENANCE FILTER ──
-    function filterMaintenance(status, btn) {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const filtered = status === 'all' ? allMaintenanceRequests : allMaintenanceRequests.filter(r => r.status === status);
-      renderMaintenance(filtered);
-    }
+  // ── MAINTENANCE ──
+  function filterMaintenance(status, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filtered = status === 'all' ? allMaintenanceRequests : allMaintenanceRequests.filter(r => r.status === status);
+    renderMaintenance(filtered);
+  }
+  function renderMaintenance(requests) {
+    document.getElementById('all-maintenance').innerHTML = requests.length === 0
+      ? `<p style="color:var(--muted);font-size:0.88rem;padding:1rem 0;">No requests found.</p>`
+      : requests.map(r => maintenanceRow(r)).join('');
+  }
 
-    function renderMaintenance(requests) {
-      document.getElementById('all-maintenance').innerHTML = requests.length === 0
-        ? `<p style="color:var(--muted);font-size:0.88rem;padding:1rem 0;">No requests found.</p>`
-        : requests.map(r => maintenanceRow(r)).join('');
-    }
-
-    // ── PROPERTIES ──
-    function renderProperties(properties) {
-      document.getElementById('property-grid').innerHTML = properties.map(p => `
-        <div class="property-card">
-          <div class="property-emoji">${p.image || '🏠'}</div>
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.25rem;">
-            <div class="property-address">${p.address}</div>
-            ${statusBadge(p.status)}
-          </div>
-          <div class="property-meta">${p.unit || ''} ${p.bedrooms || '?'} bed / ${p.bathrooms || '?'} bath</div>
-          <div style="font-size:0.82rem;color:var(--muted);">Tenant: <strong style="color:var(--slate);">${p.tenant?.name || 'Unassigned'}</strong></div>
-          <div class="property-stats">
-            <div><div class="property-stat-label">Monthly Rent</div><div class="property-stat-value">${formatCurrency(p.monthlyRent || 0)}</div></div>
-            <div><div class="property-stat-label">Bedrooms</div><div class="property-stat-value">${p.bedrooms || '—'} bed / ${p.bathrooms || '—'} bath</div></div>
-            <div><div class="property-stat-label">Lease Expires</div><div class="property-stat-value">${p.leaseExpiry ? formatDate(p.leaseExpiry) : '—'}</div></div>
-            <div><div class="property-stat-label">Status</div><div class="property-stat-value">${statusBadge(p.status)}</div></div>
-          </div>
+  // ── PROPERTIES ──
+  function renderProperties(properties) {
+    document.getElementById('property-grid').innerHTML = properties.map(p => `
+      <div class="property-card">
+        <div class="property-emoji">🏠</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.25rem;">
+          <div class="property-address">${p.address}</div>
+          ${statusBadge(p.status)}
         </div>
-      `).join('');
-    }
+        <div class="property-meta">${p.bedrooms||'?'} bed · ${p.bathrooms||'?'} bath</div>
+        <div class="property-stats">
+          <div><div class="property-stat-label">Monthly Rent</div><div class="property-stat-value">${formatCurrency(p.monthlyRent)}</div></div>
+          <div><div class="property-stat-label">Lease Expires</div><div class="property-stat-value">${formatDate(p.leaseExpiry)}</div></div>
+        </div>
+        <div class="property-card-actions">
+          ${p.tenant
+            ? `<div class="tenant-connected">✓ ${p.tenant.name}</div>`
+            : `<button class="btn-invite" onclick="openInviteModal(${p.id})">🔑 Generate Invite Code</button>`
+          }
+          <button class="btn-danger" onclick="openRemoveModal(${p.id}, '${p.address.replace(/'/g,"\\'")}')">Remove</button>
+        </div>
+      </div>`).join('');
+  }
 
-    // ── TENANTS ──
-    function renderTenants(properties) {
-      const withTenants = properties.filter(p => p.tenant?.name);
-      document.getElementById('tenant-grid').innerHTML = withTenants.length === 0
-        ? `<p style="color:var(--muted);font-size:0.88rem;">No tenant information available yet.</p>`
-        : withTenants.map(p => `
-          <div class="tenant-card">
-            <div class="tenant-avatar">${initials(p.tenant.name)}</div>
-            <div class="tenant-name">${p.tenant.name}</div>
-            <div class="tenant-property">📍 ${p.address}</div>
-            <div class="tenant-details">
-              <div class="tenant-detail-row"><span>Email</span><span>${p.tenant.email || '—'}</span></div>
-              <div class="tenant-detail-row"><span>Monthly Rent</span><span>${formatCurrency(p.monthlyRent || 0)}</span></div>
-              <div class="tenant-detail-row"><span>Lease Expires</span><span>${p.leaseExpiry ? formatDate(p.leaseExpiry) : '—'}</span></div>
-              <div class="tenant-detail-row"><span>Payment Status</span><span>${p.tenant?.paymentStatus ? statusBadge(p.tenant.paymentStatus) : '—'}</span></div>
-            </div>
+  // ── TENANTS ──
+  function renderTenants(properties) {
+    const withTenants = properties.filter(p => p.tenant);
+    document.getElementById('tenant-grid').innerHTML = withTenants.length === 0
+      ? `<div style="color:var(--muted);font-size:0.88rem;padding:1rem 0;">
+           No tenants connected yet. Generate an invite code from the Properties view to connect a tenant.
+         </div>`
+      : withTenants.map(p => `
+        <div class="tenant-card">
+          <div class="tenant-avatar">${initials(p.tenant.name)}</div>
+          <div class="tenant-name">${p.tenant.name}</div>
+          <div class="tenant-property">📍 ${p.address}</div>
+          <div class="tenant-details">
+            <div class="tenant-detail-row"><span>Email</span><span>${p.tenant.email||'—'}</span></div>
+            <div class="tenant-detail-row"><span>Phone</span><span>${p.tenant.phone||'—'}</span></div>
+            <div class="tenant-detail-row"><span>Monthly Rent</span><span>${formatCurrency(p.monthlyRent)}</span></div>
+            <div class="tenant-detail-row"><span>Lease Expires</span><span>${formatDate(p.leaseExpiry)}</span></div>
+            <div class="tenant-detail-row"><span>Connected</span><span>${formatDate(p.tenant.connectedAt)}</span></div>
           </div>
-        `).join('');
-    }
+        </div>`).join('');
+  }
 
-    // ── PROFILE ──
-    function renderProfile(owner, portfolio) {
-      document.getElementById('profile-content').innerHTML = `
+  // ── PROFILE ──
+  function renderProfile(owner, portfolio) {
+    document.getElementById('profile-content').innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
         <div>
           <div style="font-size:0.72rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem;">Personal Info</div>
           <div style="display:flex;flex-direction:column;gap:0.65rem;font-size:0.88rem;">
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Name</span><strong>${owner.firstName} ${owner.lastName}</strong></div>
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Email</span><strong>${owner.email}</strong></div>
-            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Phone</span><strong>${owner.phone}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Phone</span><strong>${owner.phone||'—'}</strong></div>
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">User ID</span><strong style="font-size:0.78rem;color:var(--muted);">${owner.userId}</strong></div>
           </div>
         </div>
@@ -553,14 +614,136 @@
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Deposits Held</span><strong>${formatCurrency(portfolio.totalDepositsHeld)}</strong></div>
           </div>
         </div>
-      </div>
-    `;
-    }
+      </div>`;
+  }
 
-    // ── INIT ──
-    loadData();
-  </script>
+  // ── ADD PROPERTY ──
+  function openAddPropertyModal() {
+    ['ap-address','ap-bedrooms','ap-bathrooms','ap-lease-status','ap-lease-start','ap-lease-expiry','ap-rent','ap-deposit'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el.tagName === 'SELECT') el.selectedIndex = 0;
+      else el.value = '';
+    });
+    openModal('modal-add-property');
+  }
+
+  async function submitAddProperty() {
+    const address = document.getElementById('ap-address').value.trim();
+    if (!address) { alert('Please enter a property address.'); return; }
+    if (!currentOwnerEmail) { alert('No owner session found. Please sign in again.'); return; }
+
+    const btn = document.getElementById('add-prop-btn');
+    btn.disabled = true; btn.textContent = 'Adding...';
+
+    try {
+      const res = await fetch(`${API}/api/property/add`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ownerEmail: currentOwnerEmail,
+          property: {
+            address,
+            bedrooms:    document.getElementById('ap-bedrooms').value,
+            bathrooms:   document.getElementById('ap-bathrooms').value,
+            leaseStatus: document.getElementById('ap-lease-status').value,
+            leaseStart:  document.getElementById('ap-lease-start').value,
+            leaseExpiry: document.getElementById('ap-lease-expiry').value,
+            monthlyRent: document.getElementById('ap-rent').value,
+            deposit:     document.getElementById('ap-deposit').value,
+          }
+        })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Server error');
+      closeModal('modal-add-property');
+      // Reload data
+      const dataRes = await fetch(`${API}/api/owner-data?email=${encodeURIComponent(currentOwnerEmail)}`);
+      ownerData = await dataRes.json();
+      ownerData.accounting = buildAccountingPlaceholder(ownerData.portfolio.totalMonthlyRent);
+      allMaintenanceRequests = ownerData.maintenanceRequests || [];
+      renderAll();
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Add Property';
+    }
+  }
+
+  // ── REMOVE PROPERTY ──
+  function openRemoveModal(propertyId, address) {
+    removePropertyId = propertyId;
+    document.getElementById('remove-modal-sub').textContent = `Are you sure you want to remove "${address}"? This will also disconnect any linked tenants.`;
+    openModal('modal-remove-property');
+  }
+
+  async function confirmRemoveProperty() {
+    if (!removePropertyId || !currentOwnerEmail) return;
+    const btn = document.getElementById('confirm-remove-btn');
+    btn.disabled = true; btn.textContent = 'Removing...';
+    try {
+      const res = await fetch(`${API}/api/property/remove`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ownerEmail: currentOwnerEmail, propertyId: removePropertyId })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Server error');
+      closeModal('modal-remove-property');
+      const dataRes = await fetch(`${API}/api/owner-data?email=${encodeURIComponent(currentOwnerEmail)}`);
+      ownerData = await dataRes.json();
+      ownerData.accounting = buildAccountingPlaceholder(ownerData.portfolio.totalMonthlyRent);
+      allMaintenanceRequests = ownerData.maintenanceRequests || [];
+      renderAll();
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Remove Property';
+      removePropertyId = null;
+    }
+  }
+
+  // ── INVITE CODE ──
+  async function openInviteModal(propertyId) {
+    activeInvitePropertyId = propertyId;
+    document.getElementById('invite-code-display').textContent = '······';
+    document.getElementById('invite-code-expiry').textContent  = 'Generating...';
+    openModal('modal-invite');
+    await generateInviteCode(propertyId);
+  }
+
+  async function generateInviteCode(propertyId) {
+    const pid = propertyId || activeInvitePropertyId;
+    if (!pid || !currentOwnerEmail) return;
+    try {
+      const res = await fetch(`${API}/api/invite/generate`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ownerEmail: currentOwnerEmail, propertyId: pid })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Server error');
+      document.getElementById('invite-code-display').textContent = json.code;
+      const expiry = new Date(json.expiresAt);
+      document.getElementById('invite-code-expiry').textContent = `Expires ${expiry.toLocaleDateString('en-US', { month:'short', day:'numeric' })} at ${expiry.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' })}`;
+    } catch (e) {
+      document.getElementById('invite-code-display').textContent = 'Error';
+      document.getElementById('invite-code-expiry').textContent  = e.message;
+    }
+  }
+
+  async function regenerateInviteCode() { await generateInviteCode(); }
+
+  function copyInviteCode() {
+    const code = document.getElementById('invite-code-display').textContent;
+    if (code && code !== '······' && code !== 'Error') {
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy Code', 2000);
+      });
+    }
+  }
+
+  // ── INIT ──
+  loadData();
+</script>
 
 </body>
-
 </html>
