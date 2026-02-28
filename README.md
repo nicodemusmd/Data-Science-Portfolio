@@ -1,4 +1,4 @@
-# Data-Science-Portfolio
+# Data Science & Analytics Portfolio
 This repository is my portfolio of data science projects... It is a work in progress.
 
 ## Contact Me
@@ -41,7 +41,7 @@ Skills Highlighted:
 </ul>
 About:<br>
 This project was completed during my Master's program in Applied Statistics at Michigan Technological University. The <a href="https://github.com/nicodemusmd/Forest_Fire">project</a> aims to understand the severity and moving direction of forest fires.
-<br>
+
 #### Predicting Vehicle Asking Price on Craigslist
 Utilized R Studio to load and preprocess data. Split the data into training and testing sets and fit multiple regression models including neural network, support vector machine and multivariate adaptive regression splines. Performed model diagnostics and tuned parameters. Generated statistical plots and selected best performing model. Wrote detailed report comparing the performance of the models. Worked with several libraries including e1071, caret, dplyr, ggplot2, MASS and Statmod.
 
