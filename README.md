@@ -49,7 +49,7 @@ Utilized R Studio to load and preprocess data. Split the data into training and 
 Project leader and lead Python programmer in a machine learning project with the focus on identifying credit card fraud within a dataset of over 280,000 entries. Split the data into training and testing sets and applied multiple classification models to the data. Produced a confusion matrix and interpreted the results. Utilized several Python libraries including Pandas, NumPy, SciPy, Scikit-Learn, Matplotlib and Seaborn.
 
 #### Stock Market Summarization
-Created a VBA Macro in Excel that summarized the stock change for 27 different companies and identified the best and least performing companies. The program looped over multiple worksheets, each with approximately 800,000 rows, and generated a performance report ordered by percent increase in volume.
+Created a VBA Macro in Excel that summarized the stock change for 27 different companies and identified the best and least performing companies. The program looped over multiple worksheets, each with approximately 800,000 rows, and generated a performance report ordered by percent increase in volume. Here is the project <a href="https://github.com/nicodemusmd/Stock_Market_Sum">repo</a>.
 
 ## Professional Progression
 ##### Business Data Analyst – Sr. Fraud and Risk Analyst ▪ Intuit 2021 – 2025
