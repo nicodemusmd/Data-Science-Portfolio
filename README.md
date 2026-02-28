@@ -22,16 +22,34 @@ Skills Highlighted:
   <li>Sprint planning</li>
   <li>HTML, CSS, JS, SQLite</li>
 </ul>
-About:
+About:<br>
 TenantFlow is a SaaS project I am working on that is a full stack website that seeks to provide automated property management services for landlords. The website will have owner and renter portals where they can manage documents, create maintenece requests, communicate and pay rent through Stripe payment integration. Additionally I am building an analytics backend to capture, store and analyze data related to form-conversion rates, payments and housing cost. The project is still a work in progress.
 
-Feel free to check out the folder <a href="https://github.com/nicodemusmd/Data-Science-Portfolio/tree/main/Projects/TenantFlow">here</a> or look at the project doc <a target="_blank" href="https://docs.google.com/document/d/1UwDdaHwbeD08hf2qtYOPc1xKhmXXrTn8Is79mWJKmzY/edit?tab=t.0">here </a>.
+Feel free to check out the <a href="https://github.com/nicodemusmd/Data-Science-Portfolio/tree/main/Projects/TenantFlow">folder</a> or look at the <a target="_blank" href="https://docs.google.com/document/d/1UwDdaHwbeD08hf2qtYOPc1xKhmXXrTn8Is79mWJKmzY/edit?tab=t.0">project doc</a>.
 
 #### Forest Fire Analysis
-
+Skills Highlighted:
+<ul>
+  <li>Git version control</li>
+  <li>Unsupervised learning algorithms</li>
+  <li>Python
+    <ul>
+      <li>Created custom library</li>
+      <li>Standard Libraries used: sklearn, pandas, numpy, scipy, matplotlib, seaborn</li>
+    </ul>
+  </li>
+</ul>
+About:<br>
+This project was completed during my Master's program in Applied Statistics at Michigan Technological University. The <a href="https://github.com/nicodemusmd/Forest_Fire">project</a> aims to understand the severity and moving direction of forest fires.
+<br>
 #### Predicting Vehicle Asking Price on Craigslist
+Utilized R Studio to load and preprocess data. Split the data into training and testing sets and fit multiple regression models including neural network, support vector machine and multivariate adaptive regression splines. Performed model diagnostics and tuned parameters. Generated statistical plots and selected best performing model. Wrote detailed report comparing the performance of the models. Worked with several libraries including e1071, caret, dplyr, ggplot2, MASS and Statmod.
+
+#### Credit Card Fraud Detection
+Project leader and lead Python programmer in a machine learning project with the focus on identifying credit card fraud within a dataset of over 280,000 entries. Split the data into training and testing sets and applied multiple classification models to the data. Produced a confusion matrix and interpreted the results. Utilized several Python libraries including Pandas, NumPy, SciPy, Scikit-Learn, Matplotlib and Seaborn.
 
 #### Stock Market Summarization
+Created a VBA Macro in Excel that summarized the stock change for 27 different companies and identified the best and least performing companies. The program looped over multiple worksheets, each with approximately 800,000 rows, and generated a performance report ordered by percent increase in volume.
 
 ## Professional Progression
 ##### Business Data Analyst – Sr. Fraud and Risk Analyst ▪ Intuit 2021 – 2025
