@@ -46,9 +46,6 @@
       <button class="nav-item" onclick="showView('apartments', this)">
         <span class="nav-icon">🏘️</span> Find Apartments
       </button>
-      <button class="nav-item" id="nav-connect" onclick="showView('connect', this)">
-        <span class="nav-icon">🔗</span> Connect Property
-      </button>
 
       <div class="nav-section-label" style="margin-top:1.5rem;">Account</div>
       <button class="nav-item" onclick="showView('profile', this)">
@@ -73,21 +70,6 @@
     </div>
 
     <div class="content-area">
-
-      <!-- ══ NOT CONNECTED BANNER ══ -->
-      <div id="connect-banner"
-        style="display:none;background:#fff;border:1.5px solid rgba(196,137,90,0.3);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;gap:1rem;align-items:center;flex-wrap:wrap;">
-        <div style="font-size:1.5rem;">🔗</div>
-        <div style="flex:1;">
-          <div style="font-weight:600;font-size:0.92rem;color:#2C3E35;margin-bottom:0.2rem;">You're not connected to a
-            property yet</div>
-          <div style="font-size:0.8rem;color:#7A8C83;">Use an invite code from your landlord, or search by their email.
-          </div>
-        </div>
-        <button onclick="showView('connect', this)"
-          style="padding:0.6rem 1.2rem;background:#2C3E35;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.83rem;cursor:pointer;">Connect
-          Now →</button>
-      </div>
 
       <!-- ══ DASHBOARD VIEW ══ -->
       <div class="view active" id="view-dashboard">
@@ -175,59 +157,6 @@
         </div>
       </div>
 
-      <!-- ══ CONNECT VIEW ══ -->
-      <div class="view" id="view-connect">
-        <div class="card" style="max-width:480px;">
-          <div class="card-title">Connect to Your Property</div>
-          <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.6;">
-            Your landlord can give you an invite code, or you can search for them by email.
-          </p>
-          <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;">
-            <button class="filter-btn active" id="portal-opt-code" onclick="switchConnectMode('code')">🔑 Invite
-              Code</button>
-            <button class="filter-btn" id="portal-opt-search" onclick="switchConnectMode('search')">🔍 Find
-              Landlord</button>
-          </div>
-          <!-- Code panel -->
-          <div id="portal-code-panel">
-            <div style="margin-bottom:1rem;">
-              <label
-                style="font-size:0.75rem;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--slate);display:block;margin-bottom:0.4rem;">Invite
-                Code</label>
-              <input type="text" id="portal-invite-code" placeholder="e.g. AB3X7K" maxlength="6"
-                style="width:100%;padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1.1rem;font-weight:600;text-align:center;letter-spacing:4px;text-transform:uppercase;background:var(--cream);outline:none;" />
-            </div>
-          </div>
-          <!-- Search panel -->
-          <div id="portal-search-panel" style="display:none;">
-            <div style="margin-bottom:0.75rem;">
-              <label
-                style="font-size:0.75rem;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--slate);display:block;margin-bottom:0.4rem;">Landlord's
-                Email</label>
-              <div style="display:flex;gap:0.5rem;">
-                <input type="email" id="portal-owner-email" placeholder="landlord@example.com"
-                  style="flex:1;padding:0.7rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.88rem;background:var(--cream);outline:none;" />
-                <button id="portal-search-btn" onclick="portalSearchOwner()"
-                  style="padding:0.7rem 1rem;background:var(--slate);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.83rem;cursor:pointer;white-space:nowrap;">Search
-                  →</button>
-              </div>
-              <span id="portal-search-error"
-                style="font-size:0.75rem;color:#E05252;margin-top:0.25rem;display:none;"></span>
-            </div>
-            <div id="portal-search-results"
-              style="display:none;background:var(--sand);border-radius:12px;padding:1rem;">
-              <div style="font-weight:600;font-size:0.85rem;color:var(--slate);margin-bottom:0.5rem;"
-                id="portal-owner-name"></div>
-              <div id="portal-property-options"></div>
-            </div>
-          </div>
-          <button id="portal-connect-btn" onclick="submitPortalConnect()"
-            style="width:100%;margin-top:1.25rem;padding:0.85rem;background:var(--slate);color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.92rem;font-weight:500;cursor:pointer;">
-            Connect to Property →
-          </button>
-        </div>
-      </div>
-
       <!-- ══ PROFILE VIEW ══ -->
       <div class="view" id="view-profile">
         <div class="card">
@@ -272,161 +201,16 @@
   </div>
 
   <script>
-    const API = `http://localhost:${location.port || 3000}`;
-    let tenantData = {};
-    let currentEmail = null;
-
     // ── DATA LOAD ──
+    let tenantData = {};
+    const API = `http://localhost:${location.port || 3000}`;
     async function loadData() {
-      const storedEmail = sessionStorage.getItem('tf_renter_email');
-
-      if (storedEmail) {
-        currentEmail = storedEmail;
-        try {
-          const res = await fetch(`${API}/api/renter-data?email=${encodeURIComponent(currentEmail)}`);
-          if (!res.ok) throw new Error('Could not load your data.');
-          const data = await res.json();
-
-          // Map real data into the shape portal.html expects
-          tenantData = {
-            tenant: {
-              userId: data.renter.userId,
-              firstName: data.renter.firstName,
-              lastName: data.renter.lastName,
-              email: data.renter.email,
-              phone: data.renter.phone || '—',
-              avatarInitials: data.renter.avatarInitials,
-            },
-            property: data.property ? {
-              address: data.property.address,
-              unit: '',
-              city: '',
-              state: '',
-              landlord: data.landlord?.name || 'Not connected',
-              bedrooms: data.property.bedrooms || '?',
-              bathrooms: data.property.bathrooms || '?',
-            } : null,
-            lease: data.property ? {
-              status: data.property.status || 'active',
-              monthlyRent: data.property.monthlyRent || 0,
-              startDate: data.property.leaseStart || new Date().toISOString().split('T')[0],
-              expiryDate: data.property.leaseExpiry || new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0],
-              securityDeposit: data.property.deposit || 0,
-            } : null,
-            // Placeholder data until payments/maintenance are built in Sprint 7-8
-            payments: { nextPayment: { amount: data.property?.monthlyRent || 0, dueDate: nextFirstOfMonth(), status: 'upcoming' }, lastPayment: { amount: data.property?.monthlyRent || 0, date: lastFirstOfMonth(), method: 'Pending', status: 'pending' }, history: [] },
-            maintenanceRequests: [],
-            documents: [],
-            connected: data.connected,
-            landlord: data.landlord,
-          };
-
-          if (!data.connected) {
-            showConnectBanner();
-          }
-          renderAll();
-        } catch (e) {
-          console.error(e);
-          loadDemo();
-        }
-      } else {
-        loadDemo();
-      }
-    }
-
-    async function loadDemo() {
       try {
-        const res = await fetch('tenant-data.json');
+        const res = await fetch(`tenant-data.json`);
         tenantData = await res.json();
-        tenantData.connected = true;
         renderAll();
-      } catch (e) { console.error('Could not load tenant-data.json', e); }
-    }
-
-    function nextFirstOfMonth() {
-      const d = new Date(); d.setMonth(d.getMonth() + 1); d.setDate(1);
-      return d.toISOString().split('T')[0];
-    }
-    function lastFirstOfMonth() {
-      const d = new Date(); d.setDate(1);
-      return d.toISOString().split('T')[0];
-    }
-
-    // ── CONNECT BANNER ──
-    function showConnectBanner() {
-      const banner = document.getElementById('connect-banner');
-      if (banner) banner.style.display = 'flex';
-    }
-
-    // ── CONNECT SECTION LOGIC ──
-    let connectMode = 'code';
-    let selectedPropertyId = null;
-    let selectedOwnerEmail = null;
-
-    function switchConnectMode(mode) {
-      connectMode = mode;
-      document.getElementById('portal-opt-code').classList.toggle('active', mode === 'code');
-      document.getElementById('portal-opt-search').classList.toggle('active', mode === 'search');
-      document.getElementById('portal-code-panel').style.display = mode === 'code' ? 'block' : 'none';
-      document.getElementById('portal-search-panel').style.display = mode === 'search' ? 'block' : 'none';
-      selectedPropertyId = null; selectedOwnerEmail = null;
-      document.getElementById('portal-search-results').style.display = 'none';
-    }
-
-    async function portalSearchOwner() {
-      const email = document.getElementById('portal-owner-email').value.trim();
-      const errEl = document.getElementById('portal-search-error');
-      errEl.classList.remove('visible');
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Please enter a valid email.'; errEl.classList.add('visible'); return; }
-      const btn = document.getElementById('portal-search-btn');
-      btn.disabled = true; btn.textContent = 'Searching...';
-      selectedOwnerEmail = email; selectedPropertyId = null;
-      try {
-        const res = await fetch(`${API}/api/invite/search-owner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ownerEmail: email }) });
-        const json = await res.json();
-        if (!res.ok) { errEl.textContent = json.error || 'No owner found.'; errEl.classList.add('visible'); btn.disabled = false; btn.textContent = 'Search →'; return; }
-        document.getElementById('portal-owner-name').textContent = `${json.owner.firstName} ${json.owner.lastName}'s properties`;
-        document.getElementById('portal-property-options').innerHTML = json.properties.map(p => `
-        <div class="property-option" id="pportal-${p.id}" onclick="portalSelectProperty(${p.id}, '${p.address.replace(/'/g, "\\'")}')">
-          <span>${p.address}</span>
-          <span style="font-size:0.75rem;opacity:0.6;">${p.bedrooms || '?'} bed · ${p.bathrooms || '?'} bath</span>
-        </div>`).join('') || '<p style="font-size:0.82rem;color:var(--muted);">No properties found.</p>';
-        document.getElementById('portal-search-results').style.display = 'block';
-      } catch (err) { errEl.textContent = 'Could not reach server.'; errEl.classList.add('visible'); }
-      finally { btn.disabled = false; btn.textContent = 'Search →'; }
-    }
-
-    function portalSelectProperty(id) {
-      selectedPropertyId = id;
-      document.querySelectorAll('.property-option').forEach(el => el.classList.remove('selected'));
-      document.getElementById(`pportal-${id}`).classList.add('selected');
-    }
-
-    async function submitPortalConnect() {
-      if (!currentEmail) { alert('No session found. Please sign in again.'); return; }
-      const btn = document.getElementById('portal-connect-btn');
-      btn.disabled = true; btn.textContent = 'Connecting...';
-
-      try {
-        let res, json;
-        if (connectMode === 'code') {
-          const code = document.getElementById('portal-invite-code').value.trim().toUpperCase();
-          if (!code || code.length < 6) { alert('Please enter a valid 6-character invite code.'); btn.disabled = false; btn.textContent = 'Connect to Property →'; return; }
-          res = await fetch(`${API}/api/invite/redeem`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ renterEmail: currentEmail, code }) });
-          json = await res.json();
-        } else {
-          if (!selectedPropertyId || !selectedOwnerEmail) { alert('Please select a property first.'); btn.disabled = false; btn.textContent = 'Connect to Property →'; return; }
-          res = await fetch(`${API}/api/invite/connect-by-search`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ renterEmail: currentEmail, propertyId: selectedPropertyId, ownerEmail: selectedOwnerEmail }) });
-          json = await res.json();
-        }
-        if (!res.ok) throw new Error(json.error || 'Server error');
-
-        // Success — reload portal data
-        alert(`✅ Connected to ${json.property.address}! Refreshing your portal...`);
-        window.location.reload();
       } catch (e) {
-        alert(e.message);
-        btn.disabled = false; btn.textContent = 'Connect to Property →';
+        console.error('Could not load tenant-data.json', e);
       }
     }
 
@@ -436,7 +220,7 @@
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       document.getElementById(`view-${viewId}`).classList.add('active');
       if (btn) btn.classList.add('active');
-      const titles = { dashboard: 'Dashboard', payments: 'Payments', maintenance: 'Maintenance Requests', documents: 'My Documents', apartments: 'Find Apartments', connect: 'Connect Property', profile: 'My Profile' };
+      const titles = { dashboard: 'Dashboard', payments: 'Payments', maintenance: 'Maintenance Requests', documents: 'My Documents', apartments: 'Find Apartments', profile: 'My Profile' };
       document.getElementById('topbar-title').textContent = titles[viewId] || viewId;
     }
 
@@ -473,35 +257,27 @@
     function renderAll() {
       const { tenant, property, lease, payments, maintenanceRequests, documents } = tenantData;
 
+      // Topbar date
       document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
+      // Sidebar
       document.getElementById('sidebar-avatar').textContent = tenant.avatarInitials;
       document.getElementById('sidebar-name').textContent = `${tenant.firstName} ${tenant.lastName}`;
-      document.getElementById('sidebar-unit').textContent = property ? property.address : 'No property connected';
+      document.getElementById('sidebar-unit').textContent = `${property.address}, ${property.unit}`;
 
-      const openCount = (maintenanceRequests || []).filter(m => m.status !== 'resolved').length;
+      // Maintenance badge — open items
+      const openCount = maintenanceRequests.filter(m => m.status !== 'resolved').length;
       const badge = document.getElementById('maintenance-badge');
       badge.textContent = openCount;
       badge.style.display = openCount > 0 ? 'inline-flex' : 'none';
 
-      if (!property || !lease) {
-        // Not connected — show minimal dashboard
-        document.getElementById('stat-grid').innerHTML = `
-        <div class="stat-card" style="grid-column:1/-1;text-align:center;padding:2rem;">
-          <div style="font-size:2rem;margin-bottom:0.75rem;">🔗</div>
-          <div style="font-weight:600;color:var(--slate);margin-bottom:0.5rem;">Connect your property to see your dashboard</div>
-          <div style="font-size:0.83rem;color:var(--muted);">Use an invite code from your landlord or search by their email.</div>
-        </div>`;
-        return;
-      }
-
-      renderStatGrid(tenant, lease, payments, maintenanceRequests || []);
+      renderStatGrid(tenant, lease, payments, maintenanceRequests);
       renderPaymentSummary(payments);
       renderLeaseSummary(lease);
-      renderRecentMaintenance(maintenanceRequests || []);
+      renderRecentMaintenance(maintenanceRequests);
       renderPaymentsView(payments);
-      renderMaintenanceView(maintenanceRequests || []);
-      renderDocuments(documents || []);
+      renderMaintenanceView(maintenanceRequests);
+      renderDocuments(documents);
       renderProfile(tenant, property);
     }
 
@@ -671,18 +447,18 @@
           <div style="display:flex;flex-direction:column;gap:0.65rem;font-size:0.88rem;">
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Name</span><strong>${tenant.firstName} ${tenant.lastName}</strong></div>
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Email</span><strong>${tenant.email}</strong></div>
-            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Phone</span><strong>${tenant.phone || '—'}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Phone</span><strong>${tenant.phone}</strong></div>
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">User ID</span><strong style="font-size:0.78rem;color:var(--muted);">${tenant.userId}</strong></div>
           </div>
         </div>
         <div>
           <div class="stat-label" style="margin-bottom:0.5rem;">Property Info</div>
           <div style="display:flex;flex-direction:column;gap:0.65rem;font-size:0.88rem;">
-            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Address</span><strong>${property?.address || '—'}</strong></div>
-            ${property?.unit ? `<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Unit</span><strong>${property.unit}</strong></div>` : ''}
-            ${(property?.city || property?.state) ? `<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">City</span><strong>${[property.city, property.state].filter(Boolean).join(', ')}</strong></div>` : ''}
-            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Landlord</span><strong>${property?.landlord || tenantData.landlord?.name || '—'}</strong></div>
-            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Beds / Baths</span><strong>${property?.bedrooms || '?'} bed / ${property?.bathrooms || '?'} bath</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Address</span><strong>${property.address}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Unit</span><strong>${property.unit}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">City</span><strong>${property.city}, ${property.state}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Landlord</span><strong>${property.landlord}</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Beds / Baths</span><strong>${property.bedrooms} bed / ${property.bathrooms} bath</strong></div>
           </div>
         </div>
       </div>
@@ -734,26 +510,31 @@
     }
 
     // ── INIT ──
+    // Check for magic link auth token in URL
     function checkAuth() {
       const params = new URLSearchParams(window.location.search);
       const auth = params.get('auth');
       const error = params.get('error');
 
-      if (error === 'invalid_token') { alert('This sign-in link is invalid. Please request a new one.'); window.location.href = 'renter.html'; return false; }
-      if (error === 'expired_token') { alert('This sign-in link has expired. Please request a new one.'); window.location.href = 'renter.html'; return false; }
-
-      // Save email to sessionStorage BEFORE wiping the URL
-      if (auth) sessionStorage.setItem('tf_renter_email', decodeURIComponent(auth));
-
+      if (error === 'invalid_token') {
+        alert('This sign-in link is invalid. Please request a new one.');
+        window.location.href = 'renter.html';
+        return false;
+      }
+      if (error === 'expired_token') {
+        alert('This sign-in link has expired. Please request a new one.');
+        window.location.href = 'renter.html';
+        return false;
+      }
+      if (!auth) {
+        // No auth token — redirect to sign in
+        // Comment this out during development if you want to preview without logging in
+        // window.location.href = 'renter.html';
+      }
+      // Clean the URL without reloading
       window.history.replaceState({}, '', 'portal.html');
       return true;
     }
-
-    // Auto-uppercase invite code input
-    document.addEventListener('DOMContentLoaded', () => {
-      const ic = document.getElementById('portal-invite-code');
-      if (ic) ic.addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
-    });
 
     checkAuth();
     loadData();
