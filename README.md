@@ -25,7 +25,7 @@ Skills Highlighted:
 About:
 TenantFlow is a SaaS project I am working on that is a full stack website that seeks to provide automated property management services for landlords. The website will have owner and renter portals where they can manage documents, create maintenece requests, communicate and pay rent through Stripe payment integration. Additionally I am building an analytics backend to capture, store and analyze data related to form-conversion rates, payments and housing cost. The project is still a work in progress.
 
-Feel free to check out the folder <a href="https://github.com/nicodemusmd/Data-Science-Portfolio/tree/main/Projects/TenantFlow">here</a> or look at the project doc <a href="https://docs.google.com/document/d/1UwDdaHwbeD08hf2qtYOPc1xKhmXXrTn8Is79mWJKmzY/edit?tab=t.0" target="_blank">here </a>.
+Feel free to check out the folder <a href="https://github.com/nicodemusmd/Data-Science-Portfolio/tree/main/Projects/TenantFlow">here</a> or look at the project doc <a target="_blank" href="https://docs.google.com/document/d/1UwDdaHwbeD08hf2qtYOPc1xKhmXXrTn8Is79mWJKmzY/edit?tab=t.0">here </a>.
 
 #### Forest Fire Analysis
 
